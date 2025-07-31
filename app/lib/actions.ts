@@ -10,103 +10,290 @@ import { z } from "zod";
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
 const FormSchema = z.object({
-  id: z.string(),
-  customerId: z.string({
-    invalid_type_error: "Please select a customer.",
-  }),
-  amount: z.coerce
-    .number()
-    .gt(0, { message: "Please enter an amount greater than $0." }),
-  status: z.enum(["pending", "paid"], {
-    invalid_type_error: "Please select an invoice status.",
-  }),
-  date: z.string(),
-});
+  codigo: z
+    .string({
+      required_error: "El código es obligatorio.",
+      invalid_type_error: "El código es obligatorio.",
+    })
+    .length(8, { message: "El código debe tener exactamente 4 caracteres." }),
 
-const CreateInvoice = FormSchema.omit({ id: true, date: true });
+  categoriaPrincipal: z
+    .string({
+      required_error: "Seleccione una categoría principal.",
+      invalid_type_error: "Seleccione una categoría principal.",
+    })
+    .min(1, { message: "Seleccione una categoría principal." }),
+
+  subcategoria: z
+    .string({
+      required_error: "Seleccione una subcategoría.",
+      invalid_type_error: "Seleccione una subcategoría.",
+    })
+    .min(1, { message: "Seleccione una subcategoría." }),
+
+  tema: z
+    .string({
+      required_error: "Seleccione un tema.",
+      invalid_type_error: "Seleccione un tema.",
+    })
+    .min(1, { message: "Seleccione un tema." }),
+
+  titulo: z
+    .string({
+      required_error: "El título es obligatorio.",
+      invalid_type_error: "El título es obligatorio.",
+    })
+    .min(3, { message: "El título debe tener al menos 3 caracteres." }),
+
+  autor: z
+    .string({
+      required_error: "El autor es obligatorio.",
+      invalid_type_error: "El autor es obligatorio.",
+    })
+    .min(3, { message: "El autor debe tener al menos 3 caracteres." }),
+
+  anio: z
+    .string({
+      required_error: "El año es obligatorio.",
+      invalid_type_error: "El año debe ser texto.",
+    })
+    .transform((val) => val.toUpperCase().trim()) // convierte a mayúsculas
+    .refine((val) => val === "SF" || /^\d{4}$/.test(val), {
+      message: "Debe ingresar un año válido (ej: 1999) o 'SF'.",
+    }),
+
+  origen: z.enum(["Copia", "Original", "Otro"], {
+    required_error: "Seleccione un origen.",
+    invalid_type_error: "Seleccione un origen.",
+  }),
+
+  estado: z.enum(
+    ["Nuevo", "Como nuevo", "Buen estado", "Regular", "Mal estado"],
+    {
+      required_error: "Seleccione un estado.",
+      invalid_type_error: "Seleccione un estado.",
+    }
+  ),
+
+  fecha_creacion: z
+    .string()
+    .datetime()
+    .default(() => new Date().toISOString()),
+});
 
 export type State = {
   errors?: {
-    customerId?: string[];
-    amount?: string[];
-    status?: string[];
+    codigo?: string[];
+    categoriaPrincipal?: string[];
+    subcategoria?: string[];
+    tema?: string[];
+    titulo?: string[];
+    autor?: string[];
+    anio?: string[];
+    origen?: string[];
+    estado?: string[];
+    fecha_creacion?: string[];
   };
   message?: string | null;
+  values?: Record<string, string>;
 };
 
-export async function createInvoice(prevState: State, formData: FormData) {
-  const validatedFields = CreateInvoice.safeParse({
-    customerId: formData.get("customerId"),
-    amount: formData.get("amount"),
-    status: formData.get("status"),
+export async function createBook(prevState: State, formData: FormData) {
+  const validatedFields = FormSchema.safeParse({
+    codigo: formData.get("codigoCompleto"),
+    categoriaPrincipal: formData.get("categoriaPrincipal"),
+    subcategoria: formData.get("subcategoria"),
+    tema: formData.get("tema"),
+    titulo: formData.get("titulo"),
+    autor: formData.get("autor"),
+    anio: formData.get("anio"),
+    origen: formData.get("origen"),
+    estado: formData.get("estado"),
+    fecha_creacion: new Date().toISOString(),
   });
 
   if (!validatedFields.success) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
-      message: "Missing Fields. Failed to Create Invoice.",
+      message: "Faltan campos. No se pudo crear el libro.",
+      values: Object.fromEntries(
+        Array.from(formData.entries()).map(([key, value]) => [
+          key,
+          String(value),
+        ])
+      ),
     };
   }
 
-  const { customerId, amount, status } = validatedFields.data;
-  const amountInCents = amount * 100;
-  const date = new Date().toISOString().split("T")[0];
+  const {
+    codigo,
+    categoriaPrincipal,
+    subcategoria,
+    tema,
+    titulo,
+    autor,
+    anio,
+    origen,
+    estado,
+    fecha_creacion,
+  } = validatedFields.data;
 
   try {
-    await sql`
-      INSERT INTO invoices (customer_id, amount, status, date)
-      VALUES (${customerId}, ${amountInCents}, ${status}, ${date})
+    // Insertamos el libro
+    const result = await sql`
+      INSERT INTO libros (codigo, titulo, autor, anio, estado, origen, categoria_id, fecha_creacion)
+      VALUES (${codigo}, ${titulo}, ${autor}, ${anio}, ${estado}, ${origen}, ${subcategoria}, ${fecha_creacion})
+      RETURNING id;
     `;
-  } catch (error) {
+
+    const libroId = result[0].id;
+
+    // Guardamos el tema (solo 1 tema por libro)
+    await sql`
+      INSERT INTO libros_temas (libro_id, tema_id)
+      VALUES (${libroId}, ${tema});
+    `;
+  } catch (error: any) {
+    console.error("Database Error:", error);
+
+    if (error.code === "23505") {
+      // Error de duplicado
+      return {
+        message: `Ya existe un libro con el código ${formData.get(
+          "codigoCompleto"
+        )}.`,
+        errors: { codigo: ["Este código ya está registrado."] },
+        values: Object.fromEntries(
+          Array.from(formData.entries()).map(([key, value]) => [
+            key,
+            String(value),
+          ])
+        ),
+      };
+    }
+
     return {
-      message: "Database Error: Failed to Create Invoice.",
+      message: "Error en la base de datos: No se pudo crear el libro.",
+      values: Object.fromEntries(
+        Array.from(formData.entries()).map(([key, value]) => [
+          key,
+          String(value),
+        ])
+      ),
     };
   }
 
-  revalidatePath("/dashboard/invoices");
-  redirect("/dashboard/invoices");
+  revalidatePath("/dashboard/books");
+  redirect("/dashboard/books");
 }
 
-const UpdateInvoice = FormSchema.omit({ id: true, date: true });
-
-export async function updateInvoice(
+export async function updateBook(
   id: string,
   prevState: State,
   formData: FormData
 ) {
-  const validatedFields = UpdateInvoice.safeParse({
-    customerId: formData.get("customerId"),
-    amount: formData.get("amount"),
-    status: formData.get("status"),
+  const validatedFields = FormSchema.safeParse({
+    codigo: formData.get("codigoCompleto"),
+    categoriaPrincipal: formData.get("categoriaPrincipal"),
+    subcategoria: formData.get("subcategoria"),
+    tema: formData.get("tema"),
+    titulo: formData.get("titulo"),
+    autor: formData.get("autor"),
+    anio: formData.get("anio"),
+    origen: formData.get("origen"),
+    estado: formData.get("estado"),
   });
 
   if (!validatedFields.success) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
-      message: "Missing Fields. Failed to Update Invoice.",
+      message: "Faltan campos. No se pudo actualizar el libro.",
+      values: Object.fromEntries(
+        Array.from(formData.entries()).map(([key, value]) => [
+          key,
+          String(value),
+        ])
+      ),
     };
   }
 
-  const { customerId, amount, status } = validatedFields.data;
-  const amountInCents = amount * 100;
+  const {
+    codigo,
+    categoriaPrincipal,
+    subcategoria,
+    tema,
+    titulo,
+    autor,
+    anio,
+    origen,
+    estado,
+  } = validatedFields.data;
 
   try {
+    // Actualizamos el libro
     await sql`
-      UPDATE invoices
-      SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
+      UPDATE libros
+      SET codigo = ${codigo},
+          titulo = ${titulo},
+          autor = ${autor},
+          anio = ${anio},
+          estado = ${estado},
+          origen = ${origen},
+          categoria_id = ${subcategoria}          
       WHERE id = ${id}
     `;
-  } catch (error) {
-    return { message: "Database Error: Failed to Update Invoice." };
+
+    // Actualizamos el tema (aseguramos solo uno por libro)
+    await sql`DELETE FROM libros_temas WHERE libro_id = ${id}`;
+    await sql`
+      INSERT INTO libros_temas (libro_id, tema_id)
+      VALUES (${id}, ${tema});
+    `;
+  } catch (error: any) {
+    console.error("Database Error:", error);
+    if (error.code === "23505") {
+      // Error de duplicado
+      return {
+        message: `Ya existe un libro con el código ${formData.get(
+          "codigoCompleto"
+        )}.`,
+        errors: { codigo: ["Este código ya está registrado."] },
+        values: Object.fromEntries(
+          Array.from(formData.entries()).map(([key, value]) => [
+            key,
+            String(value),
+          ])
+        ),
+      };
+    }
+
+    return {
+      message: `Error en la base de datos: No se pudo crear el libro. ${error.detail}`,
+      values: Object.fromEntries(
+        Array.from(formData.entries()).map(([key, value]) => [
+          key,
+          String(value),
+        ])
+      ),
+    };
   }
 
-  revalidatePath("/dashboard/invoices");
-  redirect("/dashboard/invoices");
+  revalidatePath("/dashboard/books");
+  redirect("/dashboard/books");
 }
 
-export async function deleteInvoice(id: string) {
-  await sql`DELETE FROM invoices WHERE id = ${id}`;
-  revalidatePath("/dashboard/invoices");
+export async function deleteBook(id: string) {
+  try {
+    // Primero eliminamos la relación con temas (si existe)
+    await sql`DELETE FROM libros_temas WHERE libro_id = ${id}`;
+
+    // Luego eliminamos el libro
+    await sql`DELETE FROM libros WHERE id = ${id}`;
+
+    revalidatePath("/dashboard/books");
+  } catch (error) {
+    console.error("Error eliminando el libro:", error);
+  }
 }
 
 export async function authenticate(

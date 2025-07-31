@@ -1,38 +1,29 @@
+import { fetchCardData } from "@/app/lib/data";
 import {
-  BanknotesIcon,
-  ClockIcon,
+  BookmarkIcon,
+  BookOpenIcon,
+  TagIcon,
   UserGroupIcon,
-  InboxIcon,
 } from "@heroicons/react/24/outline";
 import { nunito } from "../fonts";
-import { fetchCardData } from "@/app/lib/data";
 
 const iconMap = {
-  collected: BanknotesIcon,
-  customers: UserGroupIcon,
-  pending: ClockIcon,
-  invoices: InboxIcon,
+  libros: BookOpenIcon,
+  categorias: TagIcon,
+  temas: BookmarkIcon,
+  usuarios: UserGroupIcon,
 };
 
 export default async function CardWrapper() {
-  const {
-    numberOfInvoices,
-    numberOfCustomers,
-    totalPaidInvoices,
-    totalPendingInvoices,
-  } = await fetchCardData();
+  const { totalLibros, totalCategorias, totalTemas, totalUsuarios } =
+    await fetchCardData();
+
   return (
     <>
-      {/* NOTE: Uncomment this code in Chapter 9 */}
-
-      <Card title="Collected" value={totalPaidInvoices} type="collected" />
-      <Card title="Pending" value={totalPendingInvoices} type="pending" />
-      <Card title="Total Invoices" value={numberOfInvoices} type="invoices" />
-      <Card
-        title="Total Customers"
-        value={numberOfCustomers}
-        type="customers"
-      />
+      <Card title="Total Libros" value={totalLibros} type="libros" />
+      <Card title="Categorías" value={totalCategorias} type="categorias" />
+      <Card title="Temas" value={totalTemas} type="temas" />
+      <Card title="Usuarios" value={totalUsuarios} type="usuarios" />
     </>
   );
 }
@@ -44,7 +35,7 @@ export function Card({
 }: {
   title: string;
   value: number | string;
-  type: "invoices" | "customers" | "pending" | "collected";
+  type: "libros" | "categorias" | "temas" | "usuarios";
 }) {
   const Icon = iconMap[type];
 

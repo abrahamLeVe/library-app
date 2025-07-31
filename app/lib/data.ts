@@ -1,161 +1,193 @@
 import postgres from "postgres";
-import {
-  CustomerField,
-  CustomersTableType,
-  InvoiceForm,
-  InvoicesTable,
-  LatestInvoiceRaw,
-  Revenue,
-} from "./definitions";
+import { CustomerField, CustomersTableType } from "./definitions";
 import { formatCurrency } from "./utils";
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
-export async function fetchRevenue() {
+export async function fetchLibrosPorMes() {
   try {
-    const data = await sql<Revenue[]>`SELECT * FROM revenue`;
+    const data = await sql`
+      SELECT 
+        TO_CHAR(fecha_creacion, 'Mon') AS mes,
+        COUNT(*) AS total
+      FROM libros
+      WHERE fecha_creacion >= NOW() - INTERVAL '12 months'
+      GROUP BY TO_CHAR(fecha_creacion, 'Mon'), DATE_TRUNC('month', fecha_creacion)
+      ORDER BY DATE_TRUNC('month', fecha_creacion);
+    `;
+    return data;
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch books per month.");
+  }
+}
+
+export async function fetchLatestBooks() {
+  try {
+    const data = await sql`
+      SELECT 
+        libros.id,
+        libros.codigo,
+        libros.titulo,
+        libros.autor,
+        libros.anio,
+        libros.fecha_creacion,
+        categorias.nombre AS categoria
+      FROM libros
+      JOIN categorias ON libros.categoria_id = categorias.id
+      ORDER BY libros.fecha_creacion DESC
+      LIMIT 5;
+    `;
 
     return data;
   } catch (error) {
     console.error("Database Error:", error);
-    throw new Error("Failed to fetch revenue data.");
-  }
-}
-
-export async function fetchLatestInvoices() {
-  try {
-    const data = await sql<LatestInvoiceRaw[]>`
-      SELECT invoices.amount, customers.name, customers.image_url, customers.email, invoices.id
-      FROM invoices
-      JOIN customers ON invoices.customer_id = customers.id
-      ORDER BY invoices.date DESC
-      LIMIT 5`;
-
-    const latestInvoices = data.map((invoice) => ({
-      ...invoice,
-      amount: formatCurrency(invoice.amount),
-    }));
-    return latestInvoices;
-  } catch (error) {
-    console.error("Database Error:", error);
-    throw new Error("Failed to fetch the latest invoices.");
+    throw new Error("Failed to fetch the latest books.");
   }
 }
 
 export async function fetchCardData() {
   try {
-    // You can probably combine these into a single SQL query
-    // However, we are intentionally splitting them to demonstrate
-    // how to initialize multiple queries in parallel with JS.
-    const invoiceCountPromise = sql`SELECT COUNT(*) FROM invoices`;
-    const customerCountPromise = sql`SELECT COUNT(*) FROM customers`;
-    const invoiceStatusPromise = sql`SELECT
-         SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END) AS "paid",
-         SUM(CASE WHEN status = 'pending' THEN amount ELSE 0 END) AS "pending"
-         FROM invoices`;
+    const totalLibrosPromise = sql`SELECT COUNT(*) FROM libros`;
+    const totalCategoriasPromise = sql`SELECT COUNT(*) FROM categorias`;
+    const totalTemasPromise = sql`SELECT COUNT(*) FROM temas`;
+    const totalUsuariosPromise = sql`SELECT COUNT(*) FROM users`;
 
-    const data = await Promise.all([
-      invoiceCountPromise,
-      customerCountPromise,
-      invoiceStatusPromise,
+    const [libros, categorias, temas, usuarios] = await Promise.all([
+      totalLibrosPromise,
+      totalCategoriasPromise,
+      totalTemasPromise,
+      totalUsuariosPromise,
     ]);
 
-    const numberOfInvoices = Number(data[0][0].count ?? "0");
-    const numberOfCustomers = Number(data[1][0].count ?? "0");
-    const totalPaidInvoices = formatCurrency(data[2][0].paid ?? "0");
-    const totalPendingInvoices = formatCurrency(data[2][0].pending ?? "0");
-
     return {
-      numberOfCustomers,
-      numberOfInvoices,
-      totalPaidInvoices,
-      totalPendingInvoices,
+      totalLibros: Number(libros[0].count ?? "0"),
+      totalCategorias: Number(categorias[0].count ?? "0"),
+      totalTemas: Number(temas[0].count ?? "0"),
+      totalUsuarios: Number(usuarios[0].count ?? "0"),
     };
   } catch (error) {
     console.error("Database Error:", error);
-    throw new Error("Failed to fetch card data.");
+    throw new Error("Failed to fetch card data for library.");
   }
 }
 
 const ITEMS_PER_PAGE = 6;
-export async function fetchFilteredInvoices(
-  query: string,
-  currentPage: number
-) {
+
+export async function fetchFilteredBooks(query: string, currentPage: number) {
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
 
   try {
-    const invoices = await sql<InvoicesTable[]>`
+    const libros = await sql`
       SELECT
-        invoices.id,
-        invoices.amount,
-        invoices.date,
-        invoices.status,
-        customers.name,
-        customers.email,
-        customers.image_url
-      FROM invoices
-      JOIN customers ON invoices.customer_id = customers.id
+        libros.id,
+        libros.codigo,
+        libros.titulo,
+        libros.autor,
+        libros.anio,
+        libros.estado,
+        libros.origen,
+        -- categoría principal (nivel más alto)
+        cp.nombre AS categoria_principal,
+        cp.codigo AS codigo_principal,
+        -- categoría del libro (puede ser subcategoría)
+        c.nombre AS categoria,
+        c.codigo AS codigo_categoria,
+        -- temas asociados
+        COALESCE(STRING_AGG(t.nombre, ', '), 'Sin temas') AS temas
+      FROM libros
+      JOIN categorias c ON libros.categoria_id = c.id
+      LEFT JOIN categorias cp ON c.parent_id = cp.id
+      LEFT JOIN libros_temas lt ON libros.id = lt.libro_id
+      LEFT JOIN temas t ON lt.tema_id = t.id
       WHERE
-        customers.name ILIKE ${`%${query}%`} OR
-        customers.email ILIKE ${`%${query}%`} OR
-        invoices.amount::text ILIKE ${`%${query}%`} OR
-        invoices.date::text ILIKE ${`%${query}%`} OR
-        invoices.status ILIKE ${`%${query}%`}
-      ORDER BY invoices.date DESC
-      LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
+        libros.titulo ILIKE ${`%${query}%`} OR
+        libros.autor ILIKE ${`%${query}%`} OR
+        c.nombre ILIKE ${`%${query}%`} OR
+        c.codigo ILIKE ${`%${query}%`} OR
+        cp.nombre ILIKE ${`%${query}%`} OR
+        cp.codigo ILIKE ${`%${query}%`} OR
+        t.nombre ILIKE ${`%${query}%`} OR
+        libros.estado ILIKE ${`%${query}%`} OR
+        libros.origen ILIKE ${`%${query}%`} OR
+        libros.anio::text ILIKE ${`%${query}%`} OR
+        libros.codigo ILIKE ${`%${query}%`} 
+      GROUP BY 
+        libros.id, libros.codigo, 
+        libros.origen,
+        c.nombre, c.codigo, 
+        cp.nombre, cp.codigo
+      ORDER BY libros.fecha_creacion DESC
+      LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset};
     `;
 
-    return invoices;
+    return libros;
   } catch (error) {
     console.error("Database Error:", error);
-    throw new Error("Failed to fetch invoices.");
+    throw new Error("Failed to fetch filtered books.");
   }
 }
 
-export async function fetchInvoicesPages(query: string) {
+export async function fetchBooksPages(query: string) {
   try {
-    const data = await sql`SELECT COUNT(*)
-    FROM invoices
-    JOIN customers ON invoices.customer_id = customers.id
-    WHERE
-      customers.name ILIKE ${`%${query}%`} OR
-      customers.email ILIKE ${`%${query}%`} OR
-      invoices.amount::text ILIKE ${`%${query}%`} OR
-      invoices.date::text ILIKE ${`%${query}%`} OR
-      invoices.status ILIKE ${`%${query}%`}
-  `;
+    const data = await sql`
+      SELECT COUNT(*)
+      FROM libros
+      JOIN categorias ON libros.categoria_id = categorias.id
+      WHERE
+        libros.titulo ILIKE ${`%${query}%`} OR
+        libros.autor ILIKE ${`%${query}%`} OR
+        categorias.nombre ILIKE ${`%${query}%`} OR
+        libros.estado ILIKE ${`%${query}%`} OR
+        libros.anio::text ILIKE ${`%${query}%`}
+    `;
 
-    const totalPages = Math.ceil(Number(data[0].count) / ITEMS_PER_PAGE);
-    return totalPages;
+    return Math.ceil(Number(data[0].count) / ITEMS_PER_PAGE);
   } catch (error) {
     console.error("Database Error:", error);
-    throw new Error("Failed to fetch total number of invoices.");
+    throw new Error("Failed to fetch total number of books.");
   }
 }
 
-export async function fetchInvoiceById(id: string) {
+export async function fetchBookById(id: string) {
   try {
-    const data = await sql<InvoiceForm[]>`
+    const data = await sql<any[]>`
       SELECT
-        invoices.id,
-        invoices.customer_id,
-        invoices.amount,
-        invoices.status
-      FROM invoices
-      WHERE invoices.id = ${id};
+        l.id,
+        l.codigo,
+        l.titulo,
+        l.autor,
+        l.anio,
+        l.estado,
+        l.origen,
+        l.categoria_id,
+        t.id AS tema_id,
+        t.nombre AS tema_nombre
+      FROM libros l
+      LEFT JOIN libros_temas lt ON lt.libro_id = l.id
+      LEFT JOIN temas t ON t.id = lt.tema_id
+      WHERE l.id = ${id};
     `;
 
-    const invoice = data.map((invoice) => ({
-      ...invoice,
-      // Convert amount from cents to dollars
-      amount: invoice.amount / 100,
-    }));
+    if (data.length === 0) return null;
 
-    return invoice[0];
+    const libro = data[0];
+
+    return {
+      id: libro.id,
+      codigo: libro.codigo,
+      titulo: libro.titulo,
+      autor: libro.autor,
+      anio: libro.anio,
+      estado: libro.estado,
+      origen: libro.origen,
+      categoriaPrincipal: libro.categoria_id, // principal
+      subcategoria: libro.categoria_id, // usar el mismo para subcategoría
+      tema: libro.tema_id,
+    };
   } catch (error) {
     console.error("Database Error:", error);
-    throw new Error("Failed to fetch invoice.");
+    throw new Error("Failed to fetch book.");
   }
 }
 
@@ -206,5 +238,46 @@ export async function fetchFilteredCustomers(query: string) {
   } catch (err) {
     console.error("Database Error:", err);
     throw new Error("Failed to fetch customer table.");
+  }
+}
+
+export async function fetchCategoriasPrincipales() {
+  try {
+    return await sql`
+      SELECT id, nombre, codigo 
+      FROM categorias
+      WHERE parent_id IS NULL
+      ORDER BY nombre ASC;
+    `;
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch main categories.");
+  }
+}
+
+export async function fetchSubcategorias() {
+  try {
+    return await sql`
+      SELECT id, nombre, codigo, parent_id
+      FROM categorias
+      WHERE parent_id IS NOT NULL
+      ORDER BY nombre ASC;
+    `;
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch subcategories.");
+  }
+}
+
+export async function fetchTemas() {
+  try {
+    return await sql`
+      SELECT id, nombre 
+      FROM temas
+      ORDER BY nombre ASC;
+    `;
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch topics.");
   }
 }

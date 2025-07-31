@@ -1,13 +1,12 @@
-import { GlobeAltIcon } from "@heroicons/react/24/outline";
+import { BookOpenIcon, GlobeAltIcon } from "@heroicons/react/24/outline";
 import { nunito } from "./fonts";
 
 export default function AcmeLogo() {
   return (
     <div
-      className={`${nunito.className} flex flex-row items-center leading-none text-white`}
+      className={`${nunito.className} flex flex-col leading-none text-white`}
     >
-      <GlobeAltIcon className="h-12 w-12 rotate-[15deg]" />
-      <p className="text-[44px]">Acme</p>
+      <p className="text-[44px]">Torres Lara</p>
     </div>
   );
 }
