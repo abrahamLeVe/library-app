@@ -2,14 +2,10 @@
 
 import { State, updateBook } from "@/app/lib/actions";
 import { Button } from "@/app/ui/button";
-import {
-  BookOpenIcon,
-  CalendarIcon,
-  UserCircleIcon,
-} from "@heroicons/react/24/outline";
+import { BookOpenIcon, CalendarIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 
 export default function EditBookForm({
@@ -17,6 +13,7 @@ export default function EditBookForm({
   categoriasPrincipales,
   subcategorias,
   temas,
+  autores,
 }: any) {
   const initialState: State = { message: null, errors: {}, values: libro };
   const updateBookWithId = updateBook.bind(null, libro.id);
@@ -33,12 +30,28 @@ export default function EditBookForm({
   >(subActual ? subActual.parent_id : "");
 
   const [subCategoriaSeleccionada, setSubCategoriaSeleccionada] = useState<
-    number | ""
-  >(Number(libro.subcategoria) || "");
+    number | null
+  >(Number(libro.subcategoria) || null);
 
   const [temaSeleccionado, setTemaSeleccionado] = useState<number | "">(
     Number(libro.tema) || ""
   );
+  console.log("libro.autores:", libro.autores);
+  const [autoresSeleccionados, setAutoresSeleccionados] = useState<string[]>(
+    state.values?.autores || libro.autores?.map((a: any) => String(a.id)) || []
+  );
+
+  useEffect(() => {
+    if (state.values?.autores) {
+      setAutoresSeleccionados(
+        Array.isArray(state.values.autores)
+          ? state.values.autores.map(String)
+          : [String(state.values.autores)]
+      );
+    }
+  }, [state.values?.autores]);
+
+  console.log("Autores seleccionados:", autoresSeleccionados);
 
   const [prefijoCodigo, setPrefijoCodigo] = useState(
     libro.codigo?.split(",")[0] + "," || ""
@@ -50,7 +63,8 @@ export default function EditBookForm({
   const handleCategoriaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const catId = Number(e.target.value);
     setCategoriaSeleccionada(catId);
-    setSubCategoriaSeleccionada(""); // limpiar subcategoría
+    setSubCategoriaSeleccionada(null); // limpiar subcategoría
+    setPrefijoCodigo("");
   };
 
   const handleSubcategoriaChange = (
@@ -107,7 +121,7 @@ export default function EditBookForm({
             id="subcategoria"
             name="subcategoria"
             className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
-            value={subCategoriaSeleccionada}
+            value={subCategoriaSeleccionada ?? ""}
             onChange={handleSubcategoriaChange}
             required
           >
@@ -181,26 +195,36 @@ export default function EditBookForm({
           <FieldError errors={state.errors?.tema} />
         </div>
 
-        {/* Autor */}
+        {/* Autores */}
         <div className="mb-4">
-          <label htmlFor="autor" className="mb-2 block text-sm font-medium">
-            Autor
+          <label htmlFor="autores" className="mb-2 block text-sm font-medium">
+            Autores
           </label>
-          <div className="relative">
-            <input
-              id="autor"
-              name="autor"
-              type="text"
-              placeholder="Ej: César Vallejo"
-              className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm"
-              defaultValue={libro.autor}
-              required
-            />
-            <UserCircleIcon className="pointer-events-none absolute left-3 top-1/3 h-[18px] w-[18px] text-gray-500" />
-          </div>
-          <FieldError errors={state.errors?.autor} />
+          <select
+            id="autores"
+            name="autores"
+            multiple
+            className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
+            value={autoresSeleccionados}
+            onChange={(e) =>
+              setAutoresSeleccionados(
+                Array.from(e.target.selectedOptions, (opt) => opt.value)
+              )
+            }
+            required
+          >
+            {autores.map((autor: any) => (
+              <option key={autor.id} value={autor.id}>
+                {autor.nombre}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-gray-500">
+            Mantén presionada <kbd>Ctrl</kbd> (Windows) o <kbd>Cmd</kbd> (Mac)
+            para seleccionar varios.
+          </p>
+          <FieldError errors={state.errors?.autores} />
         </div>
-
         {/* Título */}
         <div className="mb-4">
           <label htmlFor="titulo" className="mb-2 block text-sm font-medium">
@@ -213,7 +237,7 @@ export default function EditBookForm({
               type="text"
               placeholder="Ej: Poemas Humanos"
               className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm"
-              defaultValue={libro.titulo}
+              defaultValue={state.values?.anio}
               required
             />
             <BookOpenIcon className="pointer-events-none absolute left-3 top-1/3 h-[18px] w-[18px] text-gray-500" />
@@ -232,7 +256,7 @@ export default function EditBookForm({
               name="anio"
               placeholder="Ej: 1999 o SF"
               className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm"
-              defaultValue={libro.anio}
+              defaultValue={state.values?.anio}
               required
             />
             <CalendarIcon className="pointer-events-none absolute left-3 top-1/3 h-[18px] w-[18px] text-gray-500" />
@@ -251,7 +275,7 @@ export default function EditBookForm({
                   name="origen"
                   value={origen}
                   className="h-4 w-4"
-                  defaultChecked={libro.origen === origen}
+                  defaultChecked={state.values?.origen === origen}
                   required
                 />
 
@@ -289,7 +313,7 @@ export default function EditBookForm({
                   name="estado"
                   value={estado}
                   className="h-4 w-4"
-                  defaultChecked={libro.estado === estado}
+                  defaultChecked={state.values?.estado === estado}
                   required
                 />
                 <span

@@ -1,25 +1,25 @@
 "use client";
 import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
-import { deleteBook } from "@/app/lib/actions";
+// import { deleteTema } from "@/app/lib/actions";
 import { useState, useTransition } from "react";
 
-export function CreateBook() {
+export function CreateTema() {
   return (
     <Link
-      href="/dashboard/books/create"
-      className="flex h-10 items-center rounded-lg bg-blue-600 px-4 text-sm font-medium text-white transition-colors hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+      href="/dashboard/themes/create"
+      className="flex h-10 items-center rounded-lg bg-green-600 px-4 text-sm font-medium text-white hover:bg-green-500"
     >
-      <span className="hidden md:block">Registrar libro</span>{" "}
+      <span className="hidden md:block">Registrar Tema</span>
       <PlusIcon className="h-5 md:ml-4" />
     </Link>
   );
 }
 
-export function UpdateBook({ id }: { id: string }) {
+export function UpdateTema({ id }: { id: number }) {
   return (
     <Link
-      href={`/dashboard/books/${id}/edit`}
+      href={`/dashboard/themes/${id}/edit`}
       className="rounded-md border p-2 hover:bg-gray-100"
     >
       <PencilIcon className="w-5" />
@@ -27,14 +27,14 @@ export function UpdateBook({ id }: { id: string }) {
   );
 }
 
-export function DeleteBook({ id }: { id: string }) {
-  const deleteBookWithId = deleteBook.bind(null, id);
+export function DeleteTema({ id }: { id: number }) {
+  // const deleteTemaWithId = deleteTema.bind(null, id);
   const [showModal, setShowModal] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const handleConfirmDelete = () => {
     startTransition(() => {
-      deleteBookWithId();
+      // deleteTemaWithId();
       setShowModal(false);
     });
   };
@@ -45,7 +45,6 @@ export function DeleteBook({ id }: { id: string }) {
         onClick={() => setShowModal(true)}
         className="rounded-md border p-2 hover:bg-red-100"
       >
-        <span className="sr-only">Eliminar</span>
         <TrashIcon className="w-4 text-red-600" />
       </button>
 
@@ -53,11 +52,10 @@ export function DeleteBook({ id }: { id: string }) {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-80 relative">
             <h2 className="text-lg font-semibold text-gray-800">
-              Confirmar eliminación
+              Eliminar Tema
             </h2>
-            <p className="mt-2 text-sm text-gray-600 break-words whitespace-normal">
-              ¿Seguro que quieres eliminar este libro? Esta acción no se puede
-              deshacer.
+            <p className="mt-2 text-sm text-gray-600">
+              ¿Seguro que quieres eliminar este tema?
             </p>
             <div className="mt-4 flex justify-end space-x-3">
               <button

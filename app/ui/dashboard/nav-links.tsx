@@ -3,7 +3,8 @@
 import {
   BookOpenIcon,
   HomeIcon,
-  UserGroupIcon,
+  ArchiveBoxIcon,
+  TicketIcon,
 } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import Link from "next/link";
@@ -16,7 +17,8 @@ const links = [
     href: "/dashboard/books",
     icon: BookOpenIcon,
   },
-  { name: "Autores", href: "/dashboard/category", icon: UserGroupIcon },
+  { name: "Categorías", href: "/dashboard/category", icon: ArchiveBoxIcon },
+  { name: "Temas", href: "/dashboard/themes", icon: TicketIcon },
 ];
 
 export default function NavLinks() {

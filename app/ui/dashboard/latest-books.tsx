@@ -5,6 +5,7 @@ import RefreshButton from "./refresh-button";
 
 export default async function LatestBooks() {
   const latestBooks = await fetchLatestBooks();
+
   return (
     <div className="flex w-full flex-col md:col-span-4">
       <h2 className={`${nunito.className} mb-4 text-xl md:text-2xl`}>
@@ -34,7 +35,12 @@ export default async function LatestBooks() {
                     {book.titulo}
                   </p>
                   <p className="hidden text-sm text-gray-500 sm:block">
-                    {book.autor} — {book.categoria}
+                    {/* Mostrar autores separados por coma */}
+                    {book.autores && book.autores.length > 0
+                      ? book.autores.map((a: any) => a.nombre).join(", ")
+                      : "Autor desconocido"}
+                    {" — "}
+                    {book.categoria}
                   </p>
                 </div>
               </div>

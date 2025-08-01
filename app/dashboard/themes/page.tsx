@@ -2,13 +2,14 @@ import { nunito } from "@/app/ui/fonts";
 import Search from "@/app/ui/search";
 import Pagination from "@/app/ui/books/pagination";
 import { BooksTableSkeleton } from "@/app/ui/skeletons";
-import { fetchFilteredCategorias, fetchCategoriasPages } from "@/app/lib/data";
+import { fetchFilteredTemas, fetchTemasPages } from "@/app/lib/data";
 import { Metadata } from "next";
 import { Suspense } from "react";
-import CategoriesTable from "@/app/ui/categories/table";
+import TemasTable from "@/app/ui/themes/table";
+import { CreateTema } from "@/app/ui/themes/buttons";
 
 export const metadata: Metadata = {
-  title: "Categorías",
+  title: "Temas",
 };
 
 export default async function Page(props: {
@@ -17,29 +18,23 @@ export default async function Page(props: {
   const searchParams = await props.searchParams;
   const query = searchParams?.query || "";
   const currentPage = Number(searchParams?.page) || 1;
-  const totalPages = await fetchCategoriasPages(query);
-  const categorias = await fetchFilteredCategorias(query, currentPage);
+  const totalPages = await fetchTemasPages(query);
+  const temas = await fetchFilteredTemas(query, currentPage);
 
   return (
     <div className="w-full">
       <div className="flex w-full items-center justify-between">
-        <h1 className={`${nunito.className} text-2xl`}>Categorías</h1>
+        <h1 className={`${nunito.className} text-2xl`}>Temas</h1>
       </div>
 
       <div className="mt-4 flex items-center justify-between gap-2 md:mt-8">
-        <Search placeholder="Buscar categorías..." />
-        {/* Botón de crear categoría */}
-        <a
-          href="/dashboard/category/create"
-          className="flex h-10 items-center rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-500"
-        >
-          Nueva Categoría
-        </a>
+        <Search placeholder="Buscar temas..." />
+        <CreateTema />
       </div>
 
       <div className="mt-4">
         <Suspense key={query + currentPage} fallback={<BooksTableSkeleton />}>
-          <CategoriesTable categorias={categorias} />
+          <TemasTable temas={temas} />
         </Suspense>
       </div>
 

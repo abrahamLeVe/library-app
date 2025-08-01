@@ -2,20 +2,17 @@
 
 import { createBook, State } from "@/app/lib/actions";
 import { Button } from "@/app/ui/button";
-import {
-  BookOpenIcon,
-  CalendarIcon,
-  UserCircleIcon,
-} from "@heroicons/react/24/outline";
+import { BookOpenIcon, CalendarIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 
 export default function Form({
   categoriasPrincipales,
   subcategorias,
   temas,
+  autores,
 }: any) {
   const initialState: State = { message: null, errors: {} };
   const [state, formAction] = useActionState(createBook, initialState);
@@ -24,6 +21,23 @@ export default function Form({
   const [temaSeleccionado, setTemaSeleccionado] = useState(
     state.values?.tema ?? ""
   );
+
+  // Estado inicial
+  const [autoresSeleccionados, setAutoresSeleccionados] = useState(
+    state.values?.autores ?? []
+  );
+
+  useEffect(() => {
+    if (state.values?.autores) {
+      setAutoresSeleccionados(
+        Array.isArray(state.values.autores)
+          ? state.values.autores.map(String)
+          : [String(state.values.autores)]
+      );
+    }
+  }, [state.values?.autores]);
+
+  console.log("autoresSeleccionados", autoresSeleccionados);
   // Estado para filtrar subcategorías según categoría principal
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<
     number | null
@@ -36,19 +50,24 @@ export default function Form({
   const [prefijoCodigo, setPrefijoCodigo] = useState(""); // ejemplo: 890,
   const [sufijoCodigo, setSufijoCodigo] = useState(""); // ejemplo: 0001
 
+  const handleCategoriaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const catId = Number(e.target.value);
+    setCategoriaSeleccionada(catId);
+    setSubCategoriaSeleccionada(null);
+    setPrefijoCodigo("");
+  };
+
   // Cuando cambia la subcategoría
   const handleSubcategoriaChange = (
     e: React.ChangeEvent<HTMLSelectElement>
   ) => {
     const subId = Number(e.target.value);
+    setSubCategoriaSeleccionada(subId);
     const sub = subcategorias.find((s: any) => s.id === subId);
     if (sub) {
       setPrefijoCodigo(`${sub.codigo},`);
-      setSufijoCodigo(""); // reset del sufijo
-      setSubCategoriaSeleccionada(sub.id);
     }
   };
-
   return (
     <form action={formAction}>
       <div className="rounded-md bg-gray-50 p-4 md:p-6">
@@ -65,7 +84,7 @@ export default function Form({
             name="categoriaPrincipal"
             className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
             value={categoriaSeleccionada ?? ""}
-            onChange={(e) => setCategoriaSeleccionada(Number(e.target.value))}
+            onChange={handleCategoriaChange}
             required
           >
             <option value="" disabled>
@@ -132,12 +151,10 @@ export default function Form({
               onChange={(e) => setSufijoCodigo(e.target.value)}
               className="flex-1 rounded-r-md border border-gray-200 py-2 px-2 text-sm font-mono"
               placeholder="0001"
-              minLength={4}
-              maxLength={4}
+              pattern="\d{4}"
               required
             />
           </div>
-          {/* Campo oculto para enviar el código completo */}
           <input
             type="hidden"
             name="codigoCompleto"
@@ -172,24 +189,35 @@ export default function Form({
           <FieldError errors={state.errors?.tema} />
         </div>
 
-        {/* Autor */}
+        {/* Autores */}
         <div className="mb-4">
-          <label htmlFor="autor" className="mb-2 block text-sm font-medium">
-            Autor
+          <label htmlFor="autores" className="mb-2 block text-sm font-medium">
+            Autores
           </label>
-          <div className="relative">
-            <input
-              id="autor"
-              name="autor"
-              type="text"
-              placeholder="Ej: César Vallejo"
-              className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm"
-              defaultValue={state.values?.autor ?? ""}
-              required
-            />
-            <UserCircleIcon className="pointer-events-none absolute left-3 top-1/3 h-[18px] w-[18px] text-gray-500" />
-          </div>
-          <FieldError errors={state.errors?.autor} />
+          <select
+            id="autores"
+            name="autores"
+            multiple
+            className="block w-full rounded-md border border-gray-200 py-2 px-3 text-sm"
+            value={autoresSeleccionados}
+            onChange={(e) =>
+              setAutoresSeleccionados(
+                Array.from(e.target.selectedOptions, (opt) => opt.value)
+              )
+            }
+            required
+          >
+            {autores.map((autor: any) => (
+              <option key={autor.id} value={autor.id}>
+                {autor.nombre}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-gray-500">
+            Mantén presionada <kbd>Ctrl</kbd> (Windows) o <kbd>Cmd</kbd> (Mac)
+            para seleccionar varios.
+          </p>
+          <FieldError errors={state.errors?.autores} />
         </div>
 
         {/* Título */}

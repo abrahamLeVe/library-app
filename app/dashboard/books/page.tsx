@@ -1,6 +1,6 @@
 import { fetchBooksPages } from "@/app/lib/data";
 import { nunito } from "@/app/ui/fonts";
-import { CreateInvoice } from "@/app/ui/books/buttons";
+import { CreateBook } from "@/app/ui/books/buttons";
 import Pagination from "@/app/ui/books/pagination";
 import Table from "@/app/ui/books/table";
 import Search from "@/app/ui/search";
@@ -30,7 +30,7 @@ export default async function Page(props: {
       </div>
       <div className="mt-4 flex items-center justify-between gap-2 md:mt-8">
         <Search placeholder="Buscar libros..." />
-        <CreateInvoice />
+        <CreateBook />
       </div>
       <div className="mt-4">
         <Suspense key={query + currentPage} fallback={<BooksTableSkeleton />}>

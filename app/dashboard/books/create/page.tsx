@@ -1,4 +1,5 @@
 import {
+  fetchAutores,
   fetchCategoriasPrincipales,
   fetchSubcategorias,
   fetchTemas,
@@ -15,6 +16,7 @@ export default async function Page() {
   const categoriasPrincipales = await fetchCategoriasPrincipales();
   const subcategorias = await fetchSubcategorias();
   const temas = await fetchTemas();
+  const autores = await fetchAutores();
 
   return (
     <main>
@@ -32,6 +34,7 @@ export default async function Page() {
         categoriasPrincipales={categoriasPrincipales}
         subcategorias={subcategorias}
         temas={temas}
+        autores={autores}
       />
     </main>
   );

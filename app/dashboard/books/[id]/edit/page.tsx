@@ -1,4 +1,5 @@
 import {
+  fetchAutores,
   fetchBookById,
   fetchCategoriasPrincipales,
   fetchSubcategorias,
@@ -16,12 +17,13 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   const id = params.id;
 
-  const [libro, categoriasPrincipales, subcategorias, temas] =
+  const [libro, categoriasPrincipales, subcategorias, temas, autores] =
     await Promise.all([
       fetchBookById(id),
       fetchCategoriasPrincipales(),
       fetchSubcategorias(),
       fetchTemas(),
+      fetchAutores(),
     ]);
 
   if (!libro) {
@@ -45,6 +47,7 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
         categoriasPrincipales={categoriasPrincipales}
         subcategorias={subcategorias}
         temas={temas}
+        autores={autores}
       />
     </main>
   );

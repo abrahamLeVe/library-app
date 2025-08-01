@@ -1,25 +1,26 @@
 "use client";
+
 import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
-import { deleteBook } from "@/app/lib/actions";
+import { deleteCategory } from "@/app/lib/actions"; // cambia al action de categorías
 import { useState, useTransition } from "react";
 
-export function CreateBook() {
+export function CreateCategory() {
   return (
     <Link
-      href="/dashboard/books/create"
+      href="/dashboard/category/create"
       className="flex h-10 items-center rounded-lg bg-blue-600 px-4 text-sm font-medium text-white transition-colors hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
     >
-      <span className="hidden md:block">Registrar libro</span>{" "}
+      <span className="hidden md:block">Registrar categoría</span>
       <PlusIcon className="h-5 md:ml-4" />
     </Link>
   );
 }
 
-export function UpdateBook({ id }: { id: string }) {
+export function UpdateCategory({ id }: { id: string }) {
   return (
     <Link
-      href={`/dashboard/books/${id}/edit`}
+      href={`/dashboard/category/${id}/edit`}
       className="rounded-md border p-2 hover:bg-gray-100"
     >
       <PencilIcon className="w-5" />
@@ -27,14 +28,14 @@ export function UpdateBook({ id }: { id: string }) {
   );
 }
 
-export function DeleteBook({ id }: { id: string }) {
-  const deleteBookWithId = deleteBook.bind(null, id);
+export function DeleteCategory({ id }: { id: string }) {
+  const deleteCategoryWithId = deleteCategory.bind(null, id);
   const [showModal, setShowModal] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const handleConfirmDelete = () => {
     startTransition(() => {
-      deleteBookWithId();
+      deleteCategoryWithId();
       setShowModal(false);
     });
   };
@@ -56,8 +57,8 @@ export function DeleteBook({ id }: { id: string }) {
               Confirmar eliminación
             </h2>
             <p className="mt-2 text-sm text-gray-600 break-words whitespace-normal">
-              ¿Seguro que quieres eliminar este libro? Esta acción no se puede
-              deshacer.
+              ¿Seguro que quieres eliminar esta categoría? Esta acción no se
+              puede deshacer.
             </p>
             <div className="mt-4 flex justify-end space-x-3">
               <button

@@ -36,7 +36,7 @@ export default async function LibrosTable({
                   <strong>TEMA:</strong> {libro.temas}
                 </p>
                 <p className="text-sm text-gray-700">
-                  <strong>AUTOR:</strong> {libro.autor}
+                  <strong>AUTOR(ES):</strong> {libro.autores}
                 </p>
                 <p className="text-sm text-gray-700">
                   <strong>TÍTULO:</strong> {libro.titulo}
@@ -47,9 +47,9 @@ export default async function LibrosTable({
                     className={clsx(
                       "rounded-full px-2 py-1 text-xs font-medium",
                       {
-                        "bg-red-100 text-red-800": libro.origen === "Copia", // Rojo
+                        "bg-red-100 text-red-800": libro.origen === "Copia",
                         "bg-blue-100 text-blue-800":
-                          libro.origen === "Original", // Azul
+                          libro.origen === "Original",
                       }
                     )}
                   >
@@ -62,15 +62,15 @@ export default async function LibrosTable({
                     className={clsx(
                       "rounded-full px-2 py-1 text-xs font-medium",
                       {
-                        "bg-blue-100 text-blue-800": libro.estado === "Nuevo", // Azul
+                        "bg-blue-100 text-blue-800": libro.estado === "Nuevo",
                         "bg-cyan-100 text-cyan-800":
-                          libro.estado === "Como nuevo", // Celeste
+                          libro.estado === "Como nuevo",
                         "bg-green-100 text-green-800":
-                          libro.estado === "Buen estado", // Verde
+                          libro.estado === "Buen estado",
                         "bg-orange-100 text-orange-800":
-                          libro.estado === "Regular", // Anaranjado
+                          libro.estado === "Regular",
                         "bg-red-100 text-red-800":
-                          libro.estado === "Mal estado", // Rojo
+                          libro.estado === "Mal estado",
                       }
                     )}
                   >
@@ -90,7 +90,7 @@ export default async function LibrosTable({
                 <th className="px-3 py-5 font-medium">Categoría Principal</th>
                 <th className="px-3 py-5 font-medium">Categoría</th>
                 <th className="px-3 py-5 font-medium">Temas</th>
-                <th className="px-3 py-5 font-medium">Autor</th>
+                <th className="px-3 py-5 font-medium">Autor(es)</th>
                 <th className="px-3 py-5 font-medium">Título</th>
                 <th className="px-3 py-5 font-medium">Origen</th>
                 <th className="px-3 py-5 font-medium">Estado</th>
@@ -113,7 +113,9 @@ export default async function LibrosTable({
                     {libro.categoria}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">{libro.temas}</td>
-                  <td className="whitespace-nowrap px-3 py-3">{libro.autor}</td>
+                  <td className="whitespace-nowrap px-3 py-3">
+                    {libro.autores}
+                  </td>
                   <td className="whitespace-nowrap px-3 py-3">
                     {libro.titulo}
                   </td>
@@ -122,9 +124,9 @@ export default async function LibrosTable({
                       className={clsx(
                         "rounded-full px-2 py-1 text-xs font-medium",
                         {
-                          "bg-red-100 text-red-800": libro.origen === "Copia", // Rojo
+                          "bg-red-100 text-red-800": libro.origen === "Copia",
                           "bg-blue-100 text-blue-800":
-                            libro.origen === "Original", // Azul
+                            libro.origen === "Original",
                         }
                       )}
                     >
@@ -136,15 +138,15 @@ export default async function LibrosTable({
                       className={clsx(
                         "rounded-full px-2 py-1 text-xs font-medium",
                         {
-                          "bg-blue-100 text-blue-800": libro.estado === "Nuevo", // Azul
+                          "bg-blue-100 text-blue-800": libro.estado === "Nuevo",
                           "bg-cyan-100 text-cyan-800":
-                            libro.estado === "Como nuevo", // Celeste
+                            libro.estado === "Como nuevo",
                           "bg-green-100 text-green-800":
-                            libro.estado === "Buen estado", // Verde
+                            libro.estado === "Buen estado",
                           "bg-orange-100 text-orange-800":
-                            libro.estado === "Regular", // Anaranjado
+                            libro.estado === "Regular",
                           "bg-red-100 text-red-800":
-                            libro.estado === "Mal estado", // Rojo
+                            libro.estado === "Mal estado",
                         }
                       )}
                     >
