@@ -6,6 +6,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import postgres from "postgres";
 import { z } from "zod";
+import { Tema } from "./definitions";
+import { capitalizeFirstLetter } from "./utils";
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 const FormSchema = z.object({
@@ -37,10 +39,6 @@ const FormSchema = z.object({
     "Regular",
     "Mal estado",
   ]),
-  fecha_creacion: z
-    .string()
-    .datetime()
-    .default(() => new Date().toISOString()),
 });
 
 export type State = {
@@ -54,7 +52,6 @@ export type State = {
     anio?: string[];
     origen?: string[];
     estado?: string[];
-    fecha_creacion?: string[];
   };
   message?: string | null;
   values?: Record<string, string | string[]>;
@@ -71,7 +68,6 @@ export async function createBook(prevState: State, formData: FormData) {
     anio: formData.get("anio"),
     origen: formData.get("origen"),
     estado: formData.get("estado"),
-    fecha_creacion: new Date().toISOString(),
   });
 
   if (!validatedFields.success) {
@@ -97,14 +93,13 @@ export async function createBook(prevState: State, formData: FormData) {
     anio,
     origen,
     estado,
-    fecha_creacion,
   } = validatedFields.data;
 
   try {
     // 1. Insertar libro
     const result = await sql`
-      INSERT INTO libros (codigo, titulo, anio, estado, origen, categoria_id, fecha_creacion)
-      VALUES (${codigo}, ${titulo}, ${anio}, ${estado}, ${origen}, ${subcategoria}, ${fecha_creacion})
+      INSERT INTO libros (codigo, titulo, anio, estado, origen, categoria_id)
+      VALUES (${codigo}, ${titulo}, ${anio}, ${estado}, ${origen}, ${subcategoria})
       RETURNING id;
     `;
 
@@ -142,7 +137,7 @@ export async function createBook(prevState: State, formData: FormData) {
     }
 
     return {
-      message: "Error en la base de datos: No se pudo crear el libro.",
+      message: `Error en la base de datos: No se pudo actualizar el libro. ${error.detail}`,
       values: Object.fromEntries(
         Array.from(formData.keys()).map((key) => {
           const allValues = formData.getAll(key).map((v) => String(v));
@@ -306,14 +301,35 @@ export async function createCategory(
 
     await sql`
       INSERT INTO categorias (nombre, codigo, parent_id)
-      VALUES (${nombre}, ${codigo}, ${parentId || null})
+      VALUES (${capitalizeFirstLetter(nombre)}, ${codigo}, ${parentId || null})
     `;
     revalidatePath("/dashboard/category/create");
 
     return { success: true, message: "Categoría creada exitosamente ✅" };
-  } catch (error) {
-    console.error("Error creando categoría:", error);
-    return { success: false, message: "Error al crear la categoría." };
+  } catch (error: any) {
+    console.error("Error actualizando categoría:", error);
+    if (error.code === "23505") {
+      if (error.constraint_name === "categorias_nombre_key") {
+        return {
+          success: false,
+          message: `⚠️ Ya existe una categoría con el nombre "${formData.get(
+            "nombre"
+          )}".`,
+        };
+      } else {
+        return {
+          success: false,
+          message: `⚠️ Ya existe una categoría con el código "${formData.get(
+            "codigo"
+          )}".`,
+        };
+      }
+    }
+
+    return {
+      success: false,
+      message: `Error en la base de datos: No se pudo actualizar el libro. ${error.detail}`,
+    };
   }
 }
 
@@ -337,16 +353,37 @@ export async function updateCategory(
 
     await sql`
       UPDATE categorias
-      SET nombre = ${nombre}, codigo = ${codigo}, parent_id = ${
-      parentId || null
-    }
+      SET nombre = ${capitalizeFirstLetter(
+        nombre
+      )}, codigo = ${codigo}, parent_id = ${parentId || null}
       WHERE id = ${id}
     `;
     revalidatePath(`/dashboard/category/${id}/edit`);
     return { success: true, message: "Categoría actualizada correctamente ✅" };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error actualizando categoría:", error);
-    return { success: false, message: "Error al actualizar la categoría." };
+    if (error.code === "23505") {
+      if (error.constraint_name === "categorias_nombre_key") {
+        return {
+          success: false,
+          message: `⚠️ Ya existe una categoría con el nombre "${formData.get(
+            "nombre"
+          )}".`,
+        };
+      } else {
+        return {
+          success: false,
+          message: `⚠️ Ya existe una categoría con el código "${formData.get(
+            "codigo"
+          )}".`,
+        };
+      }
+    }
+
+    return {
+      success: false,
+      message: `Error en la base de datos: No se pudo actualizar el libro. ${error.detail}`,
+    };
   }
 }
 
@@ -354,59 +391,138 @@ export async function deleteCategory(id: string) {
   try {
     await sql`DELETE FROM categorias WHERE id = ${id}`;
     revalidatePath("/dashboard/category");
+    // revalidatePath("/dashboard/category/create");
   } catch (error) {
     console.error("Error deleting category:", error);
     throw new Error("Failed to delete category.");
   }
 }
 
-//Themes
-export async function createTema(formData: FormData) {
+// ✅ Esquema de validación con Zod
+const FormSchemaTema = z.object({
+  nombre: z
+    .string()
+    .min(3, { message: "El título debe tener al menos 3 caracteres." }),
+  descripcion: z.string().optional(),
+});
+
+// ✅ Tipado del estado
+export type StateTema = {
+  errors?: {
+    nombre?: string[];
+    descripcion?: string[];
+  };
+  message?: string | null;
+  values?: {
+    nombre: string;
+    descripcion?: string | null;
+  };
+};
+
+export async function createTema(prevState: StateTema, formData: FormData) {
+  const validatedFields = FormSchemaTema.safeParse({
+    nombre: formData.get("nombre")?.toString().trim(),
+    descripcion: formData.get("descripcion"),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: "❌ Faltan campos. No se pudo actualizar el tema.",
+      values: {
+        nombre: formData.get("nombre")?.toString() || "",
+        descripcion: formData.get("descripcion")?.toString() || "",
+      },
+    };
+  }
+
+  const { nombre, descripcion } = validatedFields.data;
+
   try {
-    const nombre = formData.get("nombre")?.toString().trim();
-    const descripcion = formData.get("descripcion")?.toString().trim() || null;
-
-    if (!nombre) {
-      return { success: false, message: "El nombre es obligatorio" };
-    }
-
+    // Insertar el tema si no existe
     await sql`
       INSERT INTO temas (nombre, descripcion)
-      VALUES (${nombre}, ${descripcion})
+      VALUES (${capitalizeFirstLetter(nombre)}, ${descripcion ?? null})
     `;
 
-    return { success: true, message: "Tema creado correctamente" };
-  } catch (error) {
+    revalidatePath("/dashboard/themes"); // refrescar la lista
+    return {
+      message: `✅ Tema "${nombre}" creado correctamente.`,
+      values: { nombre, descripcion: descripcion ?? "" },
+    };
+  } catch (error: any) {
     console.error("Error creando tema:", error);
-    return { success: false, message: "Error creando tema" };
+    if (error.code === "23505") {
+      return {
+        errors: { nombre: [`⚠️ Ya existe un tema con el nombre "${nombre}".`] },
+        message: `El tema "${nombre}" ya existe.`,
+        values: { nombre, descripcion: descripcion ?? "" },
+      };
+    }
+    return { success: false, message: "❌ Error creando tema." };
   }
 }
 
-export async function updateTema(id: number, formData: FormData) {
+// ✅ Función para actualizar un tema
+export async function updateTema(
+  id: number,
+  prevState: StateTema,
+  formData: FormData
+): Promise<StateTema> {
+  // Validar campos
+  const validatedFields = FormSchemaTema.safeParse({
+    nombre: formData.get("nombre")?.toString().trim().toLowerCase(),
+    descripcion: formData.get("descripcion"),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: "❌ Faltan campos. No se pudo actualizar el tema.",
+      values: {
+        nombre: formData.get("nombre")?.toString() || "",
+        descripcion: formData.get("descripcion")?.toString() || "",
+      },
+    };
+  }
+
+  const { nombre, descripcion } = validatedFields.data;
+
   try {
-    const nombre = formData.get("nombre")?.toString().trim();
-    const descripcion = formData.get("descripcion")?.toString().trim() || null;
-
-    if (!nombre) {
-      return { success: false, message: "El nombre es obligatorio" };
-    }
-
+    // Actualizar tema
     await sql`
       UPDATE temas
-      SET nombre = ${nombre}, descripcion = ${descripcion}
+      SET nombre = ${nombre}, descripcion = ${descripcion ?? ""}
       WHERE id = ${id}
     `;
 
-    return { success: true, message: "Tema actualizado correctamente" };
-  } catch (error) {
-    console.error("Error actualizando tema:", error);
-    return { success: false, message: "Error actualizando tema" };
+    // Refrescar cache de la ruta
+    revalidatePath("/dashboard/themes");
+
+    return {
+      message: `✅ Tema "${nombre}" actualizado correctamente.`,
+      values: { nombre, descripcion: descripcion ?? "" },
+    };
+  } catch (error: any) {
+    if (error.code === "23505") {
+      return {
+        errors: { nombre: [`⚠️ Ya existe un tema con el nombre "${nombre}".`] },
+        message: `El tema "${nombre}" ya existe.`,
+        values: { nombre, descripcion: descripcion ?? "" },
+      };
+    }
+
+    return {
+      message: "❌ Error en la base de datos: No se pudo actualizar el tema.",
+      values: { nombre, descripcion: descripcion ?? "" },
+    };
   }
 }
 
 export async function deleteTema(id: number) {
   try {
     await sql`DELETE FROM temas WHERE id = ${id}`;
+    revalidatePath("/dashboard/themes");
     return { success: true, message: "Tema eliminado correctamente" };
   } catch (error) {
     console.error("Error eliminando tema:", error);

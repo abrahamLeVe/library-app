@@ -1,13 +1,13 @@
 import bcrypt from "bcrypt";
 import postgres from "postgres";
 import {
-  users,
+  autores,
   categorias,
   libros,
-  temas,
-  librosTemas,
-  autores,
   librosAutores,
+  librosTemas,
+  temas,
+  users,
 } from "../lib/placeholder-data";
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
@@ -20,7 +20,8 @@ async function seedUsers() {
       id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
       email TEXT NOT NULL UNIQUE,
-      password TEXT NOT NULL
+      password TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW()
     );
   `;
 
@@ -41,7 +42,8 @@ async function seedCategorias() {
       id SERIAL PRIMARY KEY,
       codigo VARCHAR(10) UNIQUE NOT NULL,
       nombre VARCHAR(100) UNIQUE NOT NULL,
-      parent_id INT REFERENCES categorias(id) ON DELETE CASCADE
+      parent_id INT REFERENCES categorias(id) ON DELETE CASCADE,
+      created_at TIMESTAMP DEFAULT NOW()
     );
   `;
 
@@ -64,7 +66,8 @@ async function seedAutores() {
     CREATE TABLE IF NOT EXISTS autores (
       id SERIAL PRIMARY KEY,
       nombre VARCHAR(150) UNIQUE NOT NULL,
-      biografia TEXT
+      biografia TEXT,
+      created_at TIMESTAMP DEFAULT NOW()
     );
   `;
 
@@ -90,7 +93,8 @@ async function seedLibros() {
       origen VARCHAR(100),
       estado VARCHAR(50) CHECK (
         estado IN ('Nuevo','Como nuevo','Buen estado','Regular','Mal estado')
-      )
+      ),
+      created_at TIMESTAMP DEFAULT NOW()
     );
   `;
 
@@ -113,7 +117,8 @@ async function seedTemas() {
     CREATE TABLE IF NOT EXISTS temas (
       id SERIAL PRIMARY KEY,
       nombre VARCHAR(100) UNIQUE NOT NULL,
-      descripcion TEXT
+      descripcion TEXT,
+      created_at TIMESTAMP DEFAULT NOW()
     );
   `;
 
@@ -132,7 +137,8 @@ async function seedLibrosTemas() {
     CREATE TABLE IF NOT EXISTS libros_temas (
       libro_id INT REFERENCES libros(id) ON DELETE CASCADE,
       tema_id INT REFERENCES temas(id) ON DELETE CASCADE,
-      PRIMARY KEY (libro_id, tema_id)
+      PRIMARY KEY (libro_id, tema_id),
+      created_at TIMESTAMP DEFAULT NOW()
     );
   `;
 
@@ -157,7 +163,8 @@ async function seedLibrosAutores() {
     CREATE TABLE IF NOT EXISTS libros_autores (
       libro_id INT REFERENCES libros(id) ON DELETE CASCADE,
       autor_id INT REFERENCES autores(id) ON DELETE CASCADE,
-      PRIMARY KEY (libro_id, autor_id)
+      PRIMARY KEY (libro_id, autor_id),
+      created_at TIMESTAMP DEFAULT NOW()
     );
   `;
 
@@ -197,4 +204,3 @@ export async function GET() {
     return Response.json({ error }, { status: 500 });
   }
 }
-import { fetchCategoriasPrincipales } from "@/app/lib/data";

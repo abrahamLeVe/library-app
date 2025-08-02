@@ -22,7 +22,7 @@ export default async function Page(props: {
   const temas = await fetchFilteredTemas(query, currentPage);
 
   return (
-    <div className="w-full">
+    <div className="relative overflow-x-hidden">
       <div className="flex w-full items-center justify-between">
         <h1 className={`${nunito.className} text-2xl`}>Temas</h1>
       </div>
@@ -34,7 +34,9 @@ export default async function Page(props: {
 
       <div className="mt-4">
         <Suspense key={query + currentPage} fallback={<BooksTableSkeleton />}>
-          <TemasTable temas={temas} />
+          <div className="overflow-x-auto">
+            <TemasTable temas={temas} />
+          </div>
         </Suspense>
       </div>
 

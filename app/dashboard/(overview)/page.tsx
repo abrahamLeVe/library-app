@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 
 export default async function Page() {
   return (
-    <main>
+    <main className="md:overflow-y-auto h-full">
       <h1 className={`${nunito.className} mb-4 text-xl md:text-2xl`}>
         Dashboard
       </h1>

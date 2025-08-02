@@ -24,7 +24,7 @@ export default async function Page(props: {
   const totalPages = await fetchBooksPages(query);
 
   return (
-    <div className="w-full">
+    <div className="relative overflow-x-hidden">
       <div className="flex w-full items-center justify-between">
         <h1 className={`${nunito.className} text-2xl`}>Libros</h1>
       </div>

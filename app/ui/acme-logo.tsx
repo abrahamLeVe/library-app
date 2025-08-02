@@ -1,4 +1,3 @@
-import { BookOpenIcon, GlobeAltIcon } from "@heroicons/react/24/outline";
 import { nunito } from "./fonts";
 
 export default function AcmeLogo() {

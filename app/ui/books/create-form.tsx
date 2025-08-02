@@ -294,7 +294,7 @@ export default function Form({
         {/* Estado */}
         <fieldset className="mb-4">
           <legend className="mb-2 block text-sm font-medium">Estado</legend>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
             {[
               "Nuevo",
               "Como nuevo",

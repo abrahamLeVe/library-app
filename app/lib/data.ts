@@ -7,12 +7,12 @@ export async function fetchLibrosPorMes() {
   try {
     const data = await sql`
       SELECT 
-        TO_CHAR(fecha_creacion, 'Mon') AS mes,
+        TO_CHAR(created_at, 'Mon') AS mes,
         COUNT(*) AS total
       FROM libros
-      WHERE fecha_creacion >= NOW() - INTERVAL '12 months'
-      GROUP BY TO_CHAR(fecha_creacion, 'Mon'), DATE_TRUNC('month', fecha_creacion)
-      ORDER BY DATE_TRUNC('month', fecha_creacion);
+      WHERE created_at >= NOW() - INTERVAL '12 months'
+      GROUP BY TO_CHAR(created_at, 'Mon'), DATE_TRUNC('month', created_at)
+      ORDER BY DATE_TRUNC('month', created_at);
     `;
     return data;
   } catch (error) {
@@ -29,7 +29,7 @@ export async function fetchLatestBooks() {
         l.codigo,
         l.titulo,
         l.anio,
-        l.fecha_creacion,
+        l.created_at,
         c.nombre AS categoria,
         COALESCE(
           json_agg(
@@ -43,8 +43,8 @@ export async function fetchLatestBooks() {
       JOIN categorias c ON l.categoria_id = c.id
       LEFT JOIN libros_autores la ON l.id = la.libro_id
       LEFT JOIN autores a ON la.autor_id = a.id
-      GROUP BY l.id, l.codigo, l.titulo, l.anio, l.fecha_creacion, c.nombre
-      ORDER BY l.fecha_creacion DESC
+      GROUP BY l.id, l.codigo, l.titulo, l.anio, l.created_at, c.nombre
+      ORDER BY l.created_at DESC
       LIMIT 5;
     `;
 
@@ -130,7 +130,7 @@ export async function fetchFilteredBooks(query: string, currentPage: number) {
         libros.estado, libros.origen,
         c.nombre, c.codigo, 
         cp.nombre, cp.codigo
-      ORDER BY libros.fecha_creacion DESC
+      ORDER BY libros.codigo ASC
       LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset};
     `;
 
@@ -247,12 +247,31 @@ export async function fetchFilteredCategorias(
         c.nombre ILIKE ${`%${query}%`}
         OR c.codigo ILIKE ${`%${query}%`}
         OR cp.nombre ILIKE ${`%${query}%`}
-      ORDER BY c.nombre ASC
+      ORDER BY c.codigo ASC
       LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset};
     `;
   } catch (error) {
     console.error("Database Error:", error);
     throw new Error("Failed to fetch filtered categories.");
+  }
+}
+
+export async function fetchCategorias() {
+  try {
+    return await sql<Categoria[]>`
+      SELECT 
+        c.id,
+        c.codigo,
+        c.nombre,
+        cp.nombre AS categoria_padre,
+        c.created_at
+      FROM categorias c
+      LEFT JOIN categorias cp ON c.parent_id = cp.id
+      ORDER BY c.created_at DESC
+    `;
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch categories.");
   }
 }
 
@@ -302,7 +321,7 @@ export async function fetchCategoriasPrincipales() {
       SELECT id, nombre, codigo 
       FROM categorias
       WHERE parent_id IS NULL
-      ORDER BY nombre ASC;
+      ORDER BY codigo ASC;
     `;
   } catch (error) {
     console.error("Database Error:", error);
@@ -330,10 +349,10 @@ export async function fetchCategoriaById(
 // Temas
 export async function fetchTemas() {
   try {
-    return await sql`
-      SELECT id, nombre 
+    return await sql<Tema[]>`
+      SELECT id, nombre, descripcion, created_at
       FROM temas
-      ORDER BY nombre ASC;
+      ORDER BY created_at DESC
     `;
   } catch (error) {
     console.error("Database Error:", error);
@@ -375,7 +394,7 @@ export async function fetchTemasPages(query: string): Promise<number> {
   }
 }
 
-export async function fetchTemaById(id: number): Promise<Tema | null> {
+export async function fetchTemaById(id: string): Promise<Tema | null> {
   try {
     const data = await sql<Tema[]>`
       SELECT id, nombre, descripcion

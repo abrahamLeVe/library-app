@@ -1,23 +1,37 @@
 "use client";
 
-import { createCategory } from "@/app/lib/actions";
-import { Categoria } from "@/app/lib/definitions";
-import { useActionState } from "react";
+import { createTema, StateTema } from "@/app/lib/actions"; // Ojo, aquí debe ser createTema si son temas
+import { Tema } from "@/app/lib/definitions";
 import Link from "next/link";
+import { useActionState, useState } from "react";
 
 interface FormProps {
-  categoriasPrincipales: Categoria[];
+  temas: Tema[];
 }
 
-const initialState = { success: false, message: "" };
+const initialState: StateTema = { message: null, errors: {} };
 
-export default function CreateCategoryForm({
-  categoriasPrincipales,
-}: FormProps) {
+export default function CreateThemeForm({ temas }: FormProps) {
   const [state, formAction, isPending] = useActionState(
-    createCategory,
+    createTema,
     initialState
   );
+
+  const [errorNombre, setErrorNombre] = useState("");
+
+  const handleNombreChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const valor = e.target.value.trim();
+
+    // Validar si ya existe
+    const existe = temas.some(
+      (tema) => tema.nombre.toLowerCase() === valor.toLowerCase()
+    );
+    if (existe) {
+      setErrorNombre("⚠️ Este nombre ya existe.");
+    } else {
+      setErrorNombre("");
+    }
+  };
 
   return (
     <div className="md:col-span-4">
@@ -25,7 +39,7 @@ export default function CreateCategoryForm({
         action={formAction}
         className="flex-1 space-y-5 bg-white p-6 rounded-xl shadow-md border"
       >
-        <h2 className="text-xl font-bold text-gray-800">Crear Categoría</h2>
+        <h2 className="text-xl font-bold text-gray-800">Crear Tema</h2>
 
         {/* Nombre */}
         <div>
@@ -33,63 +47,46 @@ export default function CreateCategoryForm({
             htmlFor="nombre"
             className="block text-sm font-medium text-gray-700"
           >
-            Nombre
+            Título del Tema
           </label>
           <input
             id="nombre"
             name="nombre"
             type="text"
+            onChange={handleNombreChange}
             required
-            placeholder="Ej: Literatura"
+            placeholder="Ej: Autoayuda"
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
           />
+          {errorNombre && (
+            <p className="mt-1 text-sm text-red-600">{errorNombre}</p>
+          )}
+          <FieldError errors={state.errors?.nombre} />
         </div>
 
-        {/* Código */}
+        {/* Descripción */}
         <div>
           <label
-            htmlFor="codigo"
+            htmlFor="descripcion"
             className="block text-sm font-medium text-gray-700"
           >
-            Código
+            Descripción (opcional)
           </label>
-          <input
-            id="codigo"
-            name="codigo"
-            type="text"
-            required
-            placeholder="Ej: 800"
+          <textarea
+            id="descripcion"
+            name="descripcion"
+            placeholder="Ej: Libros de desarrollo personal."
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+            rows={3}
+            maxLength={200}
           />
-        </div>
-
-        {/* Categoría Padre */}
-        <div>
-          <label
-            htmlFor="parent_id"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Categoría Padre (opcional)
-          </label>
-          <select
-            id="parent_id"
-            name="parent_id"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm"
-          >
-            <option value="">Ninguna (Principal)</option>
-            {categoriasPrincipales.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.nombre} ({cat.codigo})
-              </option>
-            ))}
-          </select>
         </div>
 
         {/* Mensajes */}
         {state.message && (
           <div
             className={`p-3 rounded-md text-sm ${
-              state.success
+              !state.errors
                 ? "bg-green-100 text-green-700"
                 : "bg-red-100 text-red-700"
             }`}
@@ -101,20 +98,33 @@ export default function CreateCategoryForm({
         {/* Botones */}
         <div className="flex justify-end gap-3">
           <Link
-            href="/dashboard/category"
+            href="/dashboard/themes"
             className="rounded-md border px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
           >
             Cancelar
           </Link>
           <button
             type="submit"
-            disabled={isPending}
+            disabled={isPending || !!errorNombre}
             className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-500 disabled:opacity-50"
           >
             {isPending ? "Guardando..." : "Guardar"}
           </button>
         </div>
       </form>
+    </div>
+  );
+}
+
+function FieldError({ errors }: { errors?: string[] }) {
+  if (!errors) return null;
+  return (
+    <div aria-live="polite">
+      {errors.map((err) => (
+        <p key={err} className="mt-2 text-sm text-red-500">
+          {err}
+        </p>
+      ))}
     </div>
   );
 }

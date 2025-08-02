@@ -1,7 +1,7 @@
 "use client";
+import { deleteTema } from "@/app/lib/actions";
 import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
-// import { deleteTema } from "@/app/lib/actions";
 import { useState, useTransition } from "react";
 
 export function CreateTema() {
@@ -28,13 +28,13 @@ export function UpdateTema({ id }: { id: number }) {
 }
 
 export function DeleteTema({ id }: { id: number }) {
-  // const deleteTemaWithId = deleteTema.bind(null, id);
+  const deleteTemaWithId = deleteTema.bind(null, id);
   const [showModal, setShowModal] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const handleConfirmDelete = () => {
     startTransition(() => {
-      // deleteTemaWithId();
+      deleteTemaWithId();
       setShowModal(false);
     });
   };
@@ -45,6 +45,7 @@ export function DeleteTema({ id }: { id: number }) {
         onClick={() => setShowModal(true)}
         className="rounded-md border p-2 hover:bg-red-100"
       >
+        <span className="sr-only">Eliminar</span>
         <TrashIcon className="w-4 text-red-600" />
       </button>
 

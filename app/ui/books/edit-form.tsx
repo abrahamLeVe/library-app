@@ -237,7 +237,7 @@ export default function EditBookForm({
               type="text"
               placeholder="Ej: Poemas Humanos"
               className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm"
-              defaultValue={state.values?.anio}
+              defaultValue={state.values?.titulo}
               required
             />
             <BookOpenIcon className="pointer-events-none absolute left-3 top-1/3 h-[18px] w-[18px] text-gray-500" />
@@ -299,7 +299,7 @@ export default function EditBookForm({
         {/* Estado */}
         <fieldset className="mb-4">
           <legend className="mb-2 block text-sm font-medium">Estado</legend>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
             {[
               "Nuevo",
               "Como nuevo",
