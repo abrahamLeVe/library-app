@@ -111,7 +111,6 @@ export function TableRowSkeleton() {
       {/* Customer Name and Image */}
       <td className="relative overflow-hidden whitespace-nowrap py-3 pl-6 pr-3">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-full bg-gray-100"></div>
           <div className="h-6 w-24 rounded bg-gray-100"></div>
         </div>
       </td>
@@ -184,25 +183,25 @@ export function BooksTableSkeleton() {
             <thead className="rounded-lg text-left text-sm font-normal">
               <tr>
                 <th scope="col" className="px-4 py-5 font-medium sm:pl-6">
-                  Customer
+                  <div className="h-6 w-24 rounded bg-gray-100"></div>
                 </th>
                 <th scope="col" className="px-3 py-5 font-medium">
-                  Email
+                  <div className="h-6 w-24 rounded bg-gray-100"></div>
                 </th>
                 <th scope="col" className="px-3 py-5 font-medium">
-                  Amount
+                  <div className="h-6 w-24 rounded bg-gray-100"></div>
                 </th>
                 <th scope="col" className="px-3 py-5 font-medium">
-                  Date
+                  <div className="h-6 w-24 rounded bg-gray-100"></div>
                 </th>
                 <th scope="col" className="px-3 py-5 font-medium">
-                  Status
+                  <div className="h-6 w-24 rounded bg-gray-100"></div>
                 </th>
                 <th
                   scope="col"
                   className="relative pb-4 pl-3 pr-6 pt-2 sm:pr-6"
                 >
-                  <span className="sr-only">Edit</span>
+                  <div className="h-6 w-24 rounded bg-gray-100"></div>
                 </th>
               </tr>
             </thead>
