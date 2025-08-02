@@ -1,11 +1,14 @@
-import { Categoria } from "@/app/lib/definitions";
+import { fetchFilteredCategorias } from "@/app/lib/data";
 import { DeleteCategory, UpdateCategory } from "./buttons";
 
-interface TableProps {
-  categorias: Categoria[];
-}
-
-export default function CategoriesTable({ categorias }: TableProps) {
+export default async function CategoriesTable({
+  query,
+  currentPage,
+}: {
+  query: string;
+  currentPage: number;
+}) {
+  const categorias = await fetchFilteredCategorias(query, currentPage);
   return (
     <div className="mt-6 flow-root">
       <div className="inline-block min-w-full align-middle">

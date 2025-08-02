@@ -1,11 +1,14 @@
-import { Tema } from "@/app/lib/definitions";
-import { UpdateTema, DeleteTema } from "./buttons";
+import { fetchFilteredTemas } from "@/app/lib/data";
+import { DeleteTema, UpdateTema } from "./buttons";
 
-interface TableProps {
-  temas: Tema[];
-}
-
-export default function TemasTable({ temas }: TableProps) {
+export default async function TemasTable({
+  query,
+  currentPage,
+}: {
+  query: string;
+  currentPage: number;
+}) {
+  const temas = await fetchFilteredTemas(query, currentPage);
   return (
     <div className="mt-6 flow-root">
       <div className="inline-block min-w-full align-middle">

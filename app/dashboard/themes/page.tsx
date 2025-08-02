@@ -1,12 +1,12 @@
+import { fetchTemasPages } from "@/app/lib/data";
+import Pagination from "@/app/ui/books/pagination";
 import { nunito } from "@/app/ui/fonts";
 import Search from "@/app/ui/search";
-import Pagination from "@/app/ui/books/pagination";
 import { BooksTableSkeleton } from "@/app/ui/skeletons";
-import { fetchFilteredTemas, fetchTemasPages } from "@/app/lib/data";
+import { CreateTema } from "@/app/ui/themes/buttons";
+import TemasTable from "@/app/ui/themes/table";
 import { Metadata } from "next";
 import { Suspense } from "react";
-import TemasTable from "@/app/ui/themes/table";
-import { CreateTema } from "@/app/ui/themes/buttons";
 
 export const metadata: Metadata = {
   title: "Temas",
@@ -19,7 +19,6 @@ export default async function Page(props: {
   const query = searchParams?.query || "";
   const currentPage = Number(searchParams?.page) || 1;
   const totalPages = await fetchTemasPages(query);
-  const temas = await fetchFilteredTemas(query, currentPage);
 
   return (
     <div className="relative overflow-x-hidden">
@@ -35,7 +34,7 @@ export default async function Page(props: {
       <div className="mt-4">
         <Suspense key={query + currentPage} fallback={<BooksTableSkeleton />}>
           <div className="overflow-x-auto">
-            <TemasTable temas={temas} />
+            <TemasTable query={query} currentPage={currentPage} />
           </div>
         </Suspense>
       </div>

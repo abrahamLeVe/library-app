@@ -1,12 +1,12 @@
+import { fetchCategoriasPages } from "@/app/lib/data";
+import Pagination from "@/app/ui/books/pagination";
+import { CreateCategory } from "@/app/ui/categories/buttons";
+import CategoriesTable from "@/app/ui/categories/table";
 import { nunito } from "@/app/ui/fonts";
 import Search from "@/app/ui/search";
-import Pagination from "@/app/ui/books/pagination";
 import { BooksTableSkeleton } from "@/app/ui/skeletons";
-import { fetchFilteredCategorias, fetchCategoriasPages } from "@/app/lib/data";
 import { Metadata } from "next";
 import { Suspense } from "react";
-import CategoriesTable from "@/app/ui/categories/table";
-import { CreateCategory } from "@/app/ui/categories/buttons";
 
 export const metadata: Metadata = {
   title: "Categorías",
@@ -19,7 +19,6 @@ export default async function Page(props: {
   const query = searchParams?.query || "";
   const currentPage = Number(searchParams?.page) || 1;
   const totalPages = await fetchCategoriasPages(query);
-  const categorias = await fetchFilteredCategorias(query, currentPage);
 
   return (
     <div className="relative overflow-x-hidden">
@@ -35,7 +34,7 @@ export default async function Page(props: {
       <div className="mt-4">
         <Suspense key={query + currentPage} fallback={<BooksTableSkeleton />}>
           <div className="overflow-x-auto">
-            <CategoriesTable categorias={categorias} />
+            <CategoriesTable query={query} currentPage={currentPage} />
           </div>
         </Suspense>
       </div>
