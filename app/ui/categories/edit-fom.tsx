@@ -60,7 +60,9 @@ export default function EditCategoryForm({
           <input
             id="codigo"
             name="codigo"
-            type="text"
+            type="number"
+            min={0}
+            max={999}
             defaultValue={categoria.codigo}
             required
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-sm focus:border-blue-500 focus:ring-blue-500"

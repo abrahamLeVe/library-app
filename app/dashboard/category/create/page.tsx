@@ -5,7 +5,7 @@ import LatestCategories from "@/app/ui/categories/latest-categories";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Crear Categoría",
+  title: "Registrar Categoría",
 };
 
 export default async function Page() {

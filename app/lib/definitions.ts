@@ -18,3 +18,10 @@ export interface User {
   email: string;
   password: string;
 }
+
+export interface Autor {
+  id: number;
+  nombre: string;
+  biografia: string | null;
+  created_at?: string;
+}

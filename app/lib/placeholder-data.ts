@@ -3,8 +3,8 @@ export const users = [
   {
     id: "410544b2-4001-4271-9855-fec4b6a6442a",
     name: "Abraham",
-    email: "lizlv@gmail.com",
-    password: "44436187966908047",
+    email: "",
+    password: "",
   },
 ];
 

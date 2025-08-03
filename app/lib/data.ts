@@ -1,5 +1,5 @@
 import postgres from "postgres";
-import { Categoria, Tema } from "./definitions";
+import { Autor, Categoria, Tema } from "./definitions";
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
@@ -60,20 +60,20 @@ export async function fetchCardData() {
     const totalLibrosPromise = sql`SELECT COUNT(*) FROM libros`;
     const totalCategoriasPromise = sql`SELECT COUNT(*) FROM categorias`;
     const totalTemasPromise = sql`SELECT COUNT(*) FROM temas`;
-    const totalUsuariosPromise = sql`SELECT COUNT(*) FROM users`;
+    const totalAutoresPromise = sql`SELECT COUNT(*) FROM autores`;
 
-    const [libros, categorias, temas, usuarios] = await Promise.all([
+    const [libros, categorias, temas, autores] = await Promise.all([
       totalLibrosPromise,
       totalCategoriasPromise,
       totalTemasPromise,
-      totalUsuariosPromise,
+      totalAutoresPromise,
     ]);
 
     return {
       totalLibros: Number(libros[0].count ?? "0"),
       totalCategorias: Number(categorias[0].count ?? "0"),
       totalTemas: Number(temas[0].count ?? "0"),
-      totalUsuarios: Number(usuarios[0].count ?? "0"),
+      totalAutores: Number(autores[0].count ?? "0"),
     };
   } catch (error) {
     console.error("Database Error:", error);
@@ -410,16 +410,81 @@ export async function fetchTemaById(id: string): Promise<Tema | null> {
 
 /*Autores*/
 
+// ✅ Obtener todos los autores (ordenados por fecha de creación)
 export async function fetchAutores() {
   try {
-    const autores = await sql`
-      SELECT id, nombre 
+    return await sql<Autor[]>`
+      SELECT id, nombre, biografia, created_at
       FROM autores
-      ORDER BY nombre ASC;
+      ORDER BY created_at DESC
     `;
-    return autores;
   } catch (error) {
     console.error("Database Error:", error);
-    throw new Error("Failed to fetch autores.");
+    throw new Error("Failed to fetch authors.");
   }
 }
+
+// ✅ Obtener autores con búsqueda y paginación
+export async function fetchFilteredAutores(
+  query: string,
+  currentPage: number
+): Promise<Autor[]> {
+  const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+
+  try {
+    return await sql<Autor[]>`
+      SELECT id, nombre, biografia
+      FROM autores
+      WHERE nombre ILIKE ${"%" + query + "%"}
+      ORDER BY nombre ASC
+      LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset};
+    `;
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch authors.");
+  }
+}
+
+// ✅ Calcular total de páginas
+export async function fetchAutoresPages(query: string): Promise<number> {
+  try {
+    const data = await sql`
+      SELECT COUNT(*) 
+      FROM autores 
+      WHERE nombre ILIKE ${"%" + query + "%"};
+    `;
+    return Math.ceil(Number(data[0].count) / ITEMS_PER_PAGE);
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch total authors pages.");
+  }
+}
+
+// ✅ Buscar un autor por ID
+export async function fetchAutorById(id: string): Promise<Autor | null> {
+  try {
+    const data = await sql<Autor[]>`
+      SELECT id, nombre, biografia
+      FROM autores
+      WHERE id = ${id};
+    `;
+    return data[0] || null;
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch author.");
+  }
+}
+
+// export async function fetchAutores() {
+//   try {
+//     const autores = await sql`
+//       SELECT id, nombre
+//       FROM autores
+//       ORDER BY nombre ASC;
+//     `;
+//     return autores;
+//   } catch (error) {
+//     console.error("Database Error:", error);
+//     throw new Error("Failed to fetch autores.");
+//   }
+// }

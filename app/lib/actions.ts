@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import postgres from "postgres";
 import { z } from "zod";
-import { Tema } from "./definitions";
+import { Autor, Tema } from "./definitions";
 import { capitalizeFirstLetter } from "./utils";
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
@@ -535,5 +535,142 @@ export async function deleteTema(id: number) {
   } catch (error) {
     console.error("Error eliminando tema:", error);
     return { success: false, message: "Error eliminando tema" };
+  }
+}
+
+/************autor***********/
+
+const FormSchemaAutor = z.object({
+  nombre: z
+    .string()
+    .min(3, { message: "El nombre debe tener al menos 3 caracteres." }),
+  biografia: z.string().optional(),
+});
+
+export type StateAutor = {
+  errors?: {
+    nombre?: string[];
+    biografia?: string[];
+  };
+  message?: string | null;
+  values?: {
+    nombre: string;
+    biografia?: string | null;
+  };
+};
+
+export async function createAutor(prevState: StateAutor, formData: FormData) {
+  const validatedFields = FormSchemaAutor.safeParse({
+    nombre: formData.get("nombre")?.toString().trim(),
+    biografia: formData.get("biografia")?.toString().trim() || null,
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: "❌ Faltan campos. No se pudo crear el autor.",
+      values: {
+        nombre: formData.get("nombre")?.toString() || "",
+        biografia: formData.get("biografia")?.toString() || "",
+      },
+    };
+  }
+
+  const { nombre, biografia } = validatedFields.data;
+
+  try {
+    await sql`
+      INSERT INTO autores (nombre, biografia)
+      VALUES (${capitalizeFirstLetter(nombre)}, ${biografia ?? null})
+    `;
+
+    revalidatePath("/dashboard/author");
+    revalidatePath("/dashboard/books");
+
+    return {
+      message: `✅ Autor "${nombre}" creado correctamente.`,
+      values: { nombre, biografia: biografia ?? "" },
+    };
+  } catch (error: any) {
+    if (error.code === "23505") {
+      return {
+        errors: {
+          nombre: [`⚠️ Ya existe un autor con el nombre "${nombre}".`],
+        },
+        message: `El autor "${nombre}" ya existe.`,
+        values: { nombre, biografia: biografia ?? "" },
+      };
+    }
+    return { message: "❌ Error creando autor." };
+  }
+}
+
+export async function updateAutor(
+  id: number,
+  prevState: StateAutor,
+  formData: FormData
+): Promise<StateAutor> {
+  const validatedFields = FormSchemaAutor.safeParse({
+    nombre: formData.get("nombre")?.toString().trim(),
+    biografia: formData.get("biografia")?.toString().trim() || null,
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: "❌ Faltan campos. No se pudo actualizar el autor.",
+      values: {
+        nombre: formData.get("nombre")?.toString() || "",
+        biografia: formData.get("biografia")?.toString() || "",
+      },
+    };
+  }
+
+  const { nombre, biografia } = validatedFields.data;
+
+  try {
+    await sql`
+      UPDATE autores
+      SET nombre = ${nombre}, biografia = ${biografia ?? null}
+      WHERE id = ${id};
+    `;
+
+    revalidatePath("/dashboard/author");
+    revalidatePath("/dashboard/books");
+
+    return {
+      message: `✅ Autor "${nombre}" actualizado correctamente.`,
+      values: { nombre, biografia: biografia ?? "" },
+    };
+  } catch (error: any) {
+    if (error.code === "23505") {
+      return {
+        errors: {
+          nombre: [`⚠️ Ya existe un autor con el nombre "${nombre}".`],
+        },
+        message: `El autor "${nombre}" ya existe.`,
+        values: { nombre, biografia: biografia ?? "" },
+      };
+    }
+
+    console.error("Database Error (updateAutor):", error);
+    return {
+      message: "❌ Error actualizando autor.",
+      values: { nombre, biografia: biografia ?? "" },
+    };
+  }
+}
+
+export async function deleteAutor(id: number) {
+  try {
+    await sql`DELETE FROM autores WHERE id = ${id};`;
+
+    revalidatePath("/dashboard/author");
+    revalidatePath("/dashboard/books"); // en caso de que estén relacionados
+
+    return { message: "✅ Autor eliminado correctamente." };
+  } catch (error) {
+    console.error("Error eliminando autor:", error);
+    throw new Error("❌ No se pudo eliminar el autor.");
   }
 }

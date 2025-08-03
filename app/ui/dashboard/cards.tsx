@@ -11,11 +11,11 @@ const iconMap = {
   libros: BookOpenIcon,
   categorias: TagIcon,
   temas: BookmarkIcon,
-  usuarios: UserGroupIcon,
+  autores: UserGroupIcon,
 };
 
 export default async function CardWrapper() {
-  const { totalLibros, totalCategorias, totalTemas, totalUsuarios } =
+  const { totalLibros, totalCategorias, totalTemas, totalAutores } =
     await fetchCardData();
 
   return (
@@ -23,7 +23,7 @@ export default async function CardWrapper() {
       <Card title="Total Libros" value={totalLibros} type="libros" />
       <Card title="Categorías" value={totalCategorias} type="categorias" />
       <Card title="Temas" value={totalTemas} type="temas" />
-      <Card title="Usuarios" value={totalUsuarios} type="usuarios" />
+      <Card title="Autores" value={totalAutores} type="autores" />
     </>
   );
 }
@@ -35,7 +35,7 @@ export function Card({
 }: {
   title: string;
   value: number | string;
-  type: "libros" | "categorias" | "temas" | "usuarios";
+  type: "libros" | "categorias" | "temas" | "autores";
 }) {
   const Icon = iconMap[type];
 

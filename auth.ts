@@ -10,7 +10,9 @@ const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
 async function getUser(email: string): Promise<User | undefined> {
   try {
-    const user = await sql<User[]>`SELECT * FROM users WHERE email=${email}`;
+    const user = await sql<User[]>`
+      SELECT * FROM users WHERE email=${email}
+    `;
     return user[0];
   } catch (error) {
     console.error("Failed to fetch user:", error);
@@ -31,14 +33,38 @@ export const { auth, signIn, signOut } = NextAuth({
           const { email, password } = parsedCredentials.data;
           const user = await getUser(email);
           if (!user) return null;
-          const passwordsMatch = await bcrypt.compare(password, user.password);
 
-          if (passwordsMatch) return user;
+          const passwordsMatch = await bcrypt.compare(password, user.password);
+          if (passwordsMatch) {
+            return {
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              role: user.role, // 👈 importante
+            };
+          }
         }
 
-        console.log("Invalid credentials");
         return null;
       },
     }),
   ],
+  session: {
+    strategy: "jwt", // usamos JWT
+    maxAge: 60 * 30, // 👈 30 minutos
+  },
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.role = (user as User).role; // guardar el rol
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (token?.role) {
+        session.user.role = token.role as "admin" | "cliente";
+      }
+      return session;
+    },
+  },
 });

@@ -1,33 +1,33 @@
-import { fetchTemas } from "@/app/lib/data";
+import { fetchAutores } from "@/app/lib/data";
+import AuthorForm from "@/app/ui/authors/create-form";
+import LatestAuthors from "@/app/ui/authors/latest-authos";
 import Breadcrumbs from "@/app/ui/books/breadcrumbs";
-import ThemeForm from "@/app/ui/themes/create-form";
-import LatestTemas from "@/app/ui/themes/latest-temas";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Registrar Tema",
+  title: "Registrar Autor",
 };
 
 export default async function Page() {
-  const temas = await fetchTemas();
+  const autores = await fetchAutores();
 
   return (
     <main className="relative overflow-hidden">
       <Breadcrumbs
         breadcrumbs={[
-          { label: "Temas", href: "/dashboard/themes" },
+          { label: "Temas", href: "/dashboard/author" },
           {
-            label: "Crear tema",
-            href: "/dashboard/themes/create",
+            label: "Registrar autor",
+            href: "/dashboard/author/create",
             active: true,
           },
         ]}
       />
 
       <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-4 lg:grid-cols-8">
-        <ThemeForm temas={temas} />
+        <AuthorForm autores={autores} />
 
-        <LatestTemas temas={temas} />
+        <LatestAuthors autores={autores} />
       </div>
     </main>
   );

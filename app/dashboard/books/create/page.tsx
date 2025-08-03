@@ -9,7 +9,7 @@ import Form from "@/app/ui/books/create-form";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Crear Libro",
+  title: "Registrar Libro",
 };
 
 export default async function Page() {

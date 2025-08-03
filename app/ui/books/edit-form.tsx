@@ -19,8 +19,6 @@ export default function EditBookForm({
   const updateBookWithId = updateBook.bind(null, libro.id);
   const [state, formAction] = useActionState(updateBookWithId, initialState);
 
-  // Estados iniciales con datos del libro
-  // Buscar la subcategoría actual
   const subActual = subcategorias.find(
     (s: any) => s.id === Number(libro.subcategoria)
   );
@@ -63,7 +61,7 @@ export default function EditBookForm({
   const handleCategoriaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const catId = Number(e.target.value);
     setCategoriaSeleccionada(catId);
-    setSubCategoriaSeleccionada(null); // limpiar subcategoría
+    setSubCategoriaSeleccionada(null);
     setPrefijoCodigo("");
   };
 
@@ -156,10 +154,17 @@ export default function EditBookForm({
               name="codigo"
               type="number"
               value={sufijoCodigo}
-              onChange={(e) => setSufijoCodigo(e.target.value)}
+              onChange={(e) => {
+                let valor = e.target.value;
+                if (valor.length > 4) {
+                  valor = valor.slice(0, 4);
+                }
+                setSufijoCodigo(valor);
+              }}
               className="flex-1 rounded-r-md border border-gray-200 py-2 px-2 text-sm font-mono"
               placeholder="0001"
               required
+              maxLength={4}
             />
           </div>
           <input
@@ -257,6 +262,7 @@ export default function EditBookForm({
               placeholder="Ej: 1999 o SF"
               className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm"
               defaultValue={state.values?.anio}
+              maxLength={4}
               required
             />
             <CalendarIcon className="pointer-events-none absolute left-3 top-1/3 h-[18px] w-[18px] text-gray-500" />
@@ -354,7 +360,7 @@ function FormButtons() {
   return (
     <div className="mt-6 flex justify-end gap-4">
       <Link
-        href="/dashboard/libros"
+        href="/dashboard/books"
         className={clsx(
           "flex h-10 items-center rounded-lg px-4 text-sm font-medium transition-colors",
           pending
