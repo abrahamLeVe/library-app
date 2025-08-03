@@ -1,5 +1,6 @@
 import { fetchFilteredCategorias } from "@/app/lib/data";
 import { DeleteCategory, UpdateCategory } from "./buttons";
+import { Suspense } from "react";
 
 export default async function CategoriesTable({
   query,
@@ -32,8 +33,10 @@ export default async function CategoriesTable({
                   </td>
                   <td className="whitespace-nowrap py-3 pl-6 pr-3">
                     <div className="flex justify-end gap-3">
-                      <UpdateCategory id={cat.id} />
-                      <DeleteCategory id={cat.id} />
+                      <Suspense>
+                        <UpdateCategory id={cat.id} />
+                        <DeleteCategory id={cat.id} />
+                      </Suspense>
                     </div>
                   </td>
                 </tr>

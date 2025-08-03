@@ -34,7 +34,6 @@ export default function EditBookForm({
   const [temaSeleccionado, setTemaSeleccionado] = useState<number | "">(
     Number(libro.tema) || ""
   );
-  console.log("libro.autores:", libro.autores);
   const [autoresSeleccionados, setAutoresSeleccionados] = useState<string[]>(
     state.values?.autores || libro.autores?.map((a: any) => String(a.id)) || []
   );
@@ -48,8 +47,6 @@ export default function EditBookForm({
       );
     }
   }, [state.values?.autores]);
-
-  console.log("Autores seleccionados:", autoresSeleccionados);
 
   const [prefijoCodigo, setPrefijoCodigo] = useState(
     libro.codigo?.split(",")[0] + "," || ""

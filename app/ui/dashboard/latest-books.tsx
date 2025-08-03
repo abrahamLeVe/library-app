@@ -21,21 +21,21 @@ export default async function LatestBooks() {
                 { "border-t": i !== 0 }
               )}
             >
-              {/* Ícono con la inicial */}
-              <div className="flex items-center">
-                <div className="mr-4 h-8 w-8 rounded-full bg-green-200 flex items-center justify-center">
+              <div className="flex items-center flex-1 min-w-0">
+                <div className="mr-4 h-8 w-8 rounded-full bg-green-200 flex items-center justify-center flex-shrink-0">
                   <span className="text-xs font-bold text-green-800">
                     {book.titulo.charAt(0).toUpperCase()}
                   </span>
                 </div>
 
-                {/* Datos principales */}
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold md:text-base">
+                <div className="w-0 flex-1 overflow-hidden">
+                  <p
+                    className="truncate text-sm font-semibold md:text-base"
+                    title={book.titulo}
+                  >
                     {book.titulo}
                   </p>
-                  <p className="hidden text-sm text-gray-500 sm:block">
-                    {/* Mostrar autores separados por coma */}
+                  <p className="hidden truncate text-sm text-gray-500 sm:block">
                     {book.autores && book.autores.length > 0
                       ? book.autores.map((a: any) => a.nombre).join(", ")
                       : "Autor desconocido"}
@@ -45,8 +45,7 @@ export default async function LatestBooks() {
                 </div>
               </div>
 
-              {/* Código y Año */}
-              <div className="text-right">
+              <div className="text-right flex-shrink-0 ml-4">
                 <p className="truncate text-sm font-medium md:text-base text-gray-700">
                   {book.codigo}
                 </p>
@@ -55,7 +54,7 @@ export default async function LatestBooks() {
             </div>
           ))}
         </div>
-        {/* Botón Actualizar */}
+
         <div className="flex items-center pb-2 pt-6">
           <RefreshButton />
         </div>
