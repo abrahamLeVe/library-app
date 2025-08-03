@@ -2,9 +2,32 @@
 export const users = [
   {
     id: "410544b2-4001-4271-9855-fec4b6a6442a",
-    name: "Abraham",
-    email: "",
-    password: "",
+    name: "Administrador",
+    email: "admin@gmail.com",
+    password: "Admin1234",
+    role: "ADMIN",
+  },
+  {
+    id: "510644c3-5002-4371-9855-fec4b6a6665b",
+    name: "María Pérez",
+    email: "asistente@gmail.com",
+    password: "Asistente123",
+    role: "ASISTENTE",
+    dni: "87654321",
+    telefono: "987444321",
+    direccion: "Av. Siempre Muerta 666",
+    fecha_nacimiento: "1985-05-12",
+  },
+  {
+    id: "510644c3-5002-4371-9855-fec4b6a6455b",
+    name: "Juan Pérez",
+    email: "cliente@gmail.com",
+    password: "Cliente123",
+    role: "CLIENT",
+    dni: "12345678",
+    telefono: "987654321",
+    direccion: "Av. Siempre Viva 742",
+    fecha_nacimiento: "1995-05-12",
   },
 ];
 

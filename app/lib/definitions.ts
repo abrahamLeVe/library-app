@@ -1,9 +1,9 @@
 export interface Categoria {
-  id: string; // ID único de la categoría
-  codigo: string; // Código de la categoría (ej: 800, 891, etc.)
-  nombre: string; // Nombre de la categoría
-  parent_id?: string | null; // ID de la categoría padre (null si es principal)
-  categoria_padre?: string | null; // Nombre de la categoría padre (cuando se hace join)
+  id: string;
+  codigo: string;
+  nombre: string;
+  parent_id?: string | null;
+  categoria_padre?: string | null;
 }
 
 export interface Tema {
@@ -17,6 +17,13 @@ export interface User {
   name: string;
   email: string;
   password: string;
+  role: "ADMIN" | "CLIENT" | "ASISTENTE";
+  dni?: string | null;
+  telefono?: string | null;
+  direccion?: string | null;
+  fecha_nacimiento?: string | null;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Autor {

@@ -15,21 +15,39 @@ const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 /* USERS */
 async function seedUsers() {
   await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
+
+  // Crear tabla con roles y datos adicionales
   await sql`
     CREATE TABLE IF NOT EXISTS users (
       id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
       email TEXT NOT NULL UNIQUE,
       password TEXT NOT NULL,
-      created_at TIMESTAMP DEFAULT NOW()
+      role VARCHAR(20) NOT NULL DEFAULT 'CLIENT', -- admin o cliente
+      dni VARCHAR(12),
+      telefono VARCHAR(15),
+      direccion TEXT,
+      fecha_nacimiento DATE,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
     );
   `;
 
   for (const user of users) {
     const hashedPassword = await bcrypt.hash(user.password, 10);
     await sql`
-      INSERT INTO users (id, name, email, password)
-      VALUES (${user.id}, ${user.name}, ${user.email}, ${hashedPassword})
+      INSERT INTO users (id, name, email, password, role, dni, telefono, direccion, fecha_nacimiento)
+      VALUES (
+        ${user.id}, 
+        ${user.name}, 
+        ${user.email}, 
+        ${hashedPassword}, 
+        ${user.role || "CLIENT"},
+        ${user.dni || null}, 
+        ${user.telefono || null}, 
+        ${user.direccion || null}, 
+        ${user.fecha_nacimiento || null}
+      )
       ON CONFLICT (id) DO NOTHING;
     `;
   }

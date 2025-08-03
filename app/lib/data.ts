@@ -1,5 +1,5 @@
 import postgres from "postgres";
-import { Autor, Categoria, Tema } from "./definitions";
+import { Autor, Categoria, Tema, User } from "./definitions";
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
@@ -475,16 +475,71 @@ export async function fetchAutorById(id: string): Promise<Autor | null> {
   }
 }
 
-// export async function fetchAutores() {
-//   try {
-//     const autores = await sql`
-//       SELECT id, nombre
-//       FROM autores
-//       ORDER BY nombre ASC;
-//     `;
-//     return autores;
-//   } catch (error) {
-//     console.error("Database Error:", error);
-//     throw new Error("Failed to fetch autores.");
-//   }
-// }
+/*******usuarios*********/
+// Obtener todos los usuarios
+export async function fetchUsers(): Promise<User[]> {
+  try {
+    const users = await sql<User[]>`
+      SELECT id, name, email, role, created_at
+      FROM users
+      ORDER BY created_at DESC
+    `;
+    return users;
+  } catch (error) {
+    console.error("Error al obtener usuarios:", error);
+    throw new Error("No se pudieron obtener los usuarios.");
+  }
+}
+
+// Filtrar usuarios con búsqueda + paginación
+export async function fetchFilteredUsers(query: string, currentPage: number) {
+  const ITEMS_PER_PAGE = 6;
+  const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+
+  try {
+    return await sql<User[]>`
+      SELECT id, name, email, role, created_at
+      FROM users
+      WHERE name ILIKE ${"%" + query + "%"}
+         OR email ILIKE ${"%" + query + "%"}
+         OR role ILIKE ${"%" + query + "%"}
+      ORDER BY created_at DESC
+      LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
+    `;
+  } catch (error) {
+    console.error("Error al filtrar usuarios:", error);
+    throw new Error("No se pudieron obtener los usuarios filtrados.");
+  }
+}
+
+// Obtener cantidad de páginas de usuarios
+export async function fetchUsersPages(query: string): Promise<number> {
+  const ITEMS_PER_PAGE = 6;
+  try {
+    const result = await sql<{ count: number }[]>`
+      SELECT COUNT(*)::int AS count
+      FROM users
+      WHERE name ILIKE ${"%" + query + "%"}
+         OR email ILIKE ${"%" + query + "%"}
+    `;
+    return Math.ceil(result[0].count / ITEMS_PER_PAGE);
+  } catch (error) {
+    console.error("Error al calcular páginas de usuarios:", error);
+    throw new Error("No se pudo calcular la cantidad de páginas.");
+  }
+}
+
+export async function fetchUserById(id: string): Promise<User | null> {
+  try {
+    const result = await sql<User[]>`
+      SELECT id, name, email, role, created_at
+      FROM users
+      WHERE id = ${id}
+      LIMIT 1;
+    `;
+    return result.length > 0 ? result[0] : null;
+  } catch (error) {
+    console.error("❌ Error al obtener usuario por ID:", error);
+    throw new Error("No se pudo obtener el usuario.");
+  }
+}

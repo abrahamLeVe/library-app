@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import postgres from "postgres";
 import { z } from "zod";
-import { Autor, Tema } from "./definitions";
+import bcrypt from "bcrypt";
 import { capitalizeFirstLetter } from "./utils";
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
@@ -275,9 +275,9 @@ export async function authenticate(
     if (error instanceof AuthError) {
       switch (error.type) {
         case "CredentialsSignin":
-          return "Invalid credentials.";
+          return "Credenciales invalidas.";
         default:
-          return "Something went wrong.";
+          return "Algo paso!.";
       }
     }
     throw error;
@@ -672,5 +672,167 @@ export async function deleteAutor(id: number) {
   } catch (error) {
     console.error("Error eliminando autor:", error);
     throw new Error("❌ No se pudo eliminar el autor.");
+  }
+}
+
+// Definición de estado para el formulario de usuarios
+export type StateUser = {
+  message: string | null;
+  errors?: Record<string, string[]>;
+  values?: {
+    name: string;
+    email: string;
+    password?: string;
+    role?: string;
+  };
+};
+
+// Esquema de validación para usuarios
+
+const FormSchemaUser = z.object({
+  name: z
+    .string()
+    .min(2, { message: "El nombre debe tener al menos 2 caracteres." }),
+  email: z.string().email({ message: "Debe ser un correo válido." }),
+  password: z
+    .string()
+    .min(6, { message: "La contraseña debe tener mínimo 6 caracteres." }),
+  role: z.enum(["ADMIN", "CLIENT", "ASISTENTE"], { message: "Rol inválido." }),
+});
+
+export async function createUser(
+  prevState: StateUser,
+  formData: FormData
+): Promise<StateUser> {
+  const validatedFields = FormSchemaUser.safeParse({
+    name: formData.get("name")?.toString().trim(),
+    email: formData.get("email")?.toString().trim(),
+    password: formData.get("password")?.toString(),
+    role: formData.get("role")?.toString().toUpperCase() || "CLIENT",
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: "❌ Datos inválidos. Revisa el formulario.",
+      values: {
+        name: formData.get("name")?.toString() || "",
+        email: formData.get("email")?.toString() || "",
+        role: formData.get("role")?.toString() || "CLIENT",
+      },
+    };
+  }
+
+  const { name, email, password, role } = validatedFields.data;
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await sql`
+      INSERT INTO users (name, email, password, role)
+      VALUES (${name}, ${email}, ${hashedPassword}, ${role})
+    `;
+
+    revalidatePath("/dashboard/users");
+
+    return {
+      message: `✅ Usuario "${name}" registrado exitosamente.`,
+      values: { name: "", email: "", role },
+    };
+  } catch (error: any) {
+    if (error.code === "23505") {
+      return {
+        errors: { email: ["⚠️ Ya existe un usuario con este correo."] },
+        message: `El usuario con correo "${email}" ya está registrado.`,
+        values: { name, email, role },
+      };
+    }
+    return { message: "❌ Error creando usuario." };
+  }
+}
+
+const FormSchemaUserUpdate = z.object({
+  name: z
+    .string()
+    .min(2, { message: "El nombre debe tener al menos 2 caracteres." }),
+  email: z.string().email({ message: "Debe ser un correo válido." }),
+  password: z.string().optional(), // ahora opcional
+  role: z.enum(["ADMIN", "CLIENT", "ASISTENTE"], { message: "Rol inválido." }),
+});
+
+export async function updateUser(
+  id: string,
+  prevState: StateUser,
+  formData: FormData
+): Promise<StateUser> {
+  const validatedFields = FormSchemaUserUpdate.safeParse({
+    name: formData.get("name")?.toString().trim(),
+    email: formData.get("email")?.toString().trim(),
+    password: formData.get("password")?.toString() || undefined, // si está vacío será undefined
+    role: formData.get("role")?.toString().toUpperCase() || "CLIENT",
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: "❌ Datos inválidos. Revisa el formulario.",
+      values: {
+        name: formData.get("name")?.toString() || "",
+        email: formData.get("email")?.toString() || "",
+        role: formData.get("role")?.toString() || "CLIENT",
+      },
+    };
+  }
+
+  const { name, email, password, role } = validatedFields.data;
+
+  try {
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      await sql`
+        UPDATE users
+        SET name=${name}, email=${email}, password=${hashedPassword}, role=${role}
+        WHERE id=${id}
+      `;
+    } else {
+      await sql`
+        UPDATE users
+        SET name=${name}, email=${email}, role=${role}
+        WHERE id=${id}
+      `;
+    }
+
+    revalidatePath("/dashboard/users");
+    return {
+      message: `✅ Usuario "${name}" actualizado exitosamente.`,
+      values: { name, email, role },
+    };
+  } catch (error: any) {
+    if (error.code === "23505") {
+      return {
+        errors: { email: ["⚠️ Ya existe un usuario con este correo."] },
+        message: `El usuario con correo "${email}" ya está registrado.`,
+        values: { name, email, role },
+      };
+    }
+    return { message: "❌ Error actualizando usuario." };
+  }
+}
+
+export async function deleteUser(id: string) {
+  try {
+    await sql`DELETE FROM users WHERE id = ${id}`;
+
+    revalidatePath("/dashboard/users");
+
+    return {
+      success: true,
+      message: "✅ Usuario eliminado correctamente.",
+    };
+  } catch (error: any) {
+    console.error("Error eliminando usuario:", error);
+    return {
+      success: false,
+      message: "❌ No se pudo eliminar el usuario.",
+    };
   }
 }
