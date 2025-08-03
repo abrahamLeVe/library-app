@@ -1,10 +1,10 @@
-import NextAuth from "next-auth";
-import Credentials from "next-auth/providers/credentials";
-import { authConfig } from "./auth.config";
-import { z } from "zod";
 import type { User } from "@/app/lib/definitions";
 import bcrypt from "bcrypt";
+import NextAuth from "next-auth";
+import Credentials from "next-auth/providers/credentials";
 import postgres from "postgres";
+import { z } from "zod";
+import { authConfig } from "./auth.config";
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
@@ -27,18 +27,40 @@ export const { auth, signIn, signOut } = NextAuth({
           .object({ email: z.string().email(), password: z.string().min(6) })
           .safeParse(credentials);
 
-        if (parsedCredentials.success) {
-          const { email, password } = parsedCredentials.data;
-          const user = await getUser(email);
-          if (!user) return null;
-          const passwordsMatch = await bcrypt.compare(password, user.password);
+        if (!parsedCredentials.success) return null;
 
-          if (passwordsMatch) return user;
-        }
+        const { email, password } = parsedCredentials.data;
+        const user = await getUser(email);
+        if (!user) return null;
 
-        console.log("Invalid credentials");
-        return null;
+        const passwordsMatch = await bcrypt.compare(password, user.password);
+        if (!passwordsMatch) return null;
+
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role, // 👈 importante
+        };
       },
     }),
   ],
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.role = user.role;
+        console.log("user ", user);
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.id as string;
+        session.user.role = token.role as "ADMIN" | "ASISTENTE" | "CLIENT";
+        console.log("session ", session);
+      }
+      return session;
+    },
+  },
 });
