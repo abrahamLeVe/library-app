@@ -304,6 +304,7 @@ export async function createCategory(
       VALUES (${capitalizeFirstLetter(nombre)}, ${codigo}, ${parentId || null})
     `;
     revalidatePath("/dashboard/category/create");
+    revalidatePath("/dashboard/books");
 
     return { success: true, message: "Categoría creada exitosamente ✅" };
   } catch (error: any) {
@@ -359,6 +360,8 @@ export async function updateCategory(
       WHERE id = ${id}
     `;
     revalidatePath(`/dashboard/category/${id}/edit`);
+    revalidatePath("/dashboard/books");
+
     return { success: true, message: "Categoría actualizada correctamente ✅" };
   } catch (error: any) {
     console.error("Error actualizando categoría:", error);
@@ -391,7 +394,7 @@ export async function deleteCategory(id: string) {
   try {
     await sql`DELETE FROM categorias WHERE id = ${id}`;
     revalidatePath("/dashboard/category");
-    // revalidatePath("/dashboard/category/create");
+    revalidatePath("/dashboard/books");
   } catch (error) {
     console.error("Error deleting category:", error);
     throw new Error("Failed to delete category.");
@@ -446,6 +449,8 @@ export async function createTema(prevState: StateTema, formData: FormData) {
     `;
 
     revalidatePath("/dashboard/themes"); // refrescar la lista
+    revalidatePath("/dashboard/books");
+
     return {
       message: `✅ Tema "${nombre}" creado correctamente.`,
       values: { nombre, descripcion: descripcion ?? "" },
@@ -498,6 +503,7 @@ export async function updateTema(
 
     // Refrescar cache de la ruta
     revalidatePath("/dashboard/themes");
+    revalidatePath("/dashboard/books");
 
     return {
       message: `✅ Tema "${nombre}" actualizado correctamente.`,
@@ -523,6 +529,8 @@ export async function deleteTema(id: number) {
   try {
     await sql`DELETE FROM temas WHERE id = ${id}`;
     revalidatePath("/dashboard/themes");
+    revalidatePath("/dashboard/books");
+
     return { success: true, message: "Tema eliminado correctamente" };
   } catch (error) {
     console.error("Error eliminando tema:", error);
