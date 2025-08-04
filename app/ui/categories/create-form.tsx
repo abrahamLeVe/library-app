@@ -4,6 +4,8 @@ import { createCategory } from "@/app/lib/actions";
 import { Categoria } from "@/app/lib/definitions";
 import { useActionState } from "react";
 import Link from "next/link";
+import { Button } from "../button";
+import clsx from "clsx";
 
 interface FormProps {
   categoriasPrincipales: Categoria[];
@@ -104,17 +106,19 @@ export default function CreateCategoryForm({
         <div className="flex justify-end gap-3">
           <Link
             href="/dashboard/category"
-            className="rounded-md border px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            className={clsx(
+              "flex h-10 items-center rounded-lg px-4 text-sm font-medium transition-colors",
+              isPending
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            )}
+            onClick={(e) => isPending && e.preventDefault()}
           >
             Cancelar
           </Link>
-          <button
-            type="submit"
-            disabled={isPending}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-500 disabled:opacity-50"
-          >
+          <Button type="submit" disabled={isPending}>
             {isPending ? "Guardando..." : "Guardar"}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

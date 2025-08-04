@@ -4,6 +4,8 @@ import { createTema, StateTema } from "@/app/lib/actions"; // Ojo, aquí debe se
 import { Tema } from "@/app/lib/definitions";
 import Link from "next/link";
 import { useActionState, useState } from "react";
+import { Button } from "../button";
+import clsx from "clsx";
 
 interface FormProps {
   temas: Tema[];
@@ -99,17 +101,19 @@ export default function CreateThemeForm({ temas }: FormProps) {
         <div className="flex justify-end gap-3">
           <Link
             href="/dashboard/themes"
-            className="rounded-md border px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            className={clsx(
+              "flex h-10 items-center rounded-lg px-4 text-sm font-medium transition-colors",
+              isPending
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            )}
+            onClick={(e) => isPending && e.preventDefault()}
           >
             Cancelar
           </Link>
-          <button
-            type="submit"
-            disabled={isPending || !!errorNombre}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-500 disabled:opacity-50"
-          >
+          <Button type="submit" disabled={isPending || !!errorNombre}>
             {isPending ? "Guardando..." : "Guardar"}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

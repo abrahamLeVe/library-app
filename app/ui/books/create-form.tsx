@@ -346,11 +346,15 @@ export default function Form({
       </div>
 
       {/* Botones */}
-      {/* Botones */}
       <div className="flex justify-end gap-3">
         <Link
           href="/dashboard/books"
-          className="rounded-md border px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+          className={clsx(
+            "flex h-10 items-center rounded-lg px-4 text-sm font-medium transition-colors",
+            isPending
+              ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+          )}
           onClick={(e) => isPending && e.preventDefault()}
         >
           Cancelar

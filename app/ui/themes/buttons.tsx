@@ -8,7 +8,7 @@ export function CreateTema() {
   return (
     <Link
       href="/dashboard/themes/create"
-      className="flex h-10 items-center rounded-lg bg-green-600 px-4 text-sm font-medium text-white hover:bg-green-500"
+      className="flex h-10 items-center rounded-lg bg-blue-500 px-4 text-sm font-medium text-white hover:bg-blue-400 "
     >
       <span className="hidden md:block">Registrar Tema</span>
       <PlusIcon className="h-5 md:ml-4" />
