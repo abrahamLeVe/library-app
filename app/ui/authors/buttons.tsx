@@ -1,5 +1,5 @@
 "use client";
-import { deleteAutor, deleteTema } from "@/app/lib/actions";
+import { deleteAutor } from "@/app/lib/actions";
 import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { useState, useTransition } from "react";

@@ -1,6 +1,6 @@
 "use client";
 
-import { updateUser, StateUser } from "@/app/lib/actions";
+import { StateUser, updateUser } from "@/app/lib/actions";
 import { User } from "@/app/lib/definitions";
 import Link from "next/link";
 import { useActionState } from "react";

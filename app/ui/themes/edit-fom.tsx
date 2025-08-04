@@ -39,14 +39,12 @@ export default function EditThemeForm({ temas, tema }: FormProps) {
 
   return (
     <div className="md:col-span-4">
-      {/* Formulario */}
       <form
         action={formAction}
         className="flex-1 space-y-5 bg-white p-6 rounded-xl shadow-md border"
       >
         <h2 className="text-xl font-bold text-gray-800">Editar Tema</h2>
 
-        {/* Nombre */}
         <div>
           <label
             htmlFor="nombre"
@@ -70,7 +68,6 @@ export default function EditThemeForm({ temas, tema }: FormProps) {
           <FieldError errors={state.errors?.nombre} />
         </div>
 
-        {/* Descripción */}
         <div>
           <label
             htmlFor="descripcion"
@@ -90,7 +87,6 @@ export default function EditThemeForm({ temas, tema }: FormProps) {
           />
         </div>
 
-        {/* Mensajes */}
         {state.message && (
           <div
             className={`p-3 rounded-md text-sm ${
@@ -103,7 +99,6 @@ export default function EditThemeForm({ temas, tema }: FormProps) {
           </div>
         )}
 
-        {/* Botones */}
         <div className="flex justify-end gap-3">
           <Link
             href="/dashboard/themes"

@@ -6,7 +6,6 @@ import { BookOpenIcon, CalendarIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
-import { useFormStatus } from "react-dom";
 
 export default function EditBookForm({
   libro,
@@ -17,7 +16,10 @@ export default function EditBookForm({
 }: any) {
   const initialState: State = { message: null, errors: {}, values: libro };
   const updateBookWithId = updateBook.bind(null, libro.id);
-  const [state, formAction] = useActionState(updateBookWithId, initialState);
+  const [state, formAction, isPendig] = useActionState(
+    updateBookWithId,
+    initialState
+  );
 
   const subActual = subcategorias.find(
     (s: any) => s.id === Number(libro.subcategoria)
@@ -346,34 +348,26 @@ export default function EditBookForm({
         )}
       </div>
 
-      <FormButtons />
+      <div className="mt-6 flex justify-end gap-4">
+        <Link
+          href="/dashboard/books"
+          className={clsx(
+            "flex h-10 items-center rounded-lg px-4 text-sm font-medium transition-colors",
+            isPendig
+              ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+          )}
+          aria-disabled={isPendig}
+          onClick={(e) => isPendig && e.preventDefault()}
+        >
+          Cancelar
+        </Link>
+
+        <Button type="submit" disabled={isPendig}>
+          {isPendig ? "Actualizando..." : "Actualizar Libro"}
+        </Button>
+      </div>
     </form>
-  );
-}
-
-function FormButtons() {
-  const { pending } = useFormStatus();
-
-  return (
-    <div className="mt-6 flex justify-end gap-4">
-      <Link
-        href="/dashboard/books"
-        className={clsx(
-          "flex h-10 items-center rounded-lg px-4 text-sm font-medium transition-colors",
-          pending
-            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-        )}
-        aria-disabled={pending}
-        onClick={(e) => pending && e.preventDefault()}
-      >
-        Cancelar
-      </Link>
-
-      <Button type="submit" disabled={pending}>
-        {pending ? "Actualizando..." : "Actualizar Libro"}
-      </Button>
-    </div>
   );
 }
 

@@ -11,25 +11,34 @@ import {
 import clsx from "clsx";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { SideNavProps } from "./sidenav";
 
 const links = [
   { name: "Home", href: "/dashboard", icon: HomeIcon },
+  { name: "Libros", href: "/dashboard/books", icon: BookOpenIcon },
   {
-    name: "Libros",
-    href: "/dashboard/books",
-    icon: BookOpenIcon,
+    name: "Categorías",
+    href: "/dashboard/category",
+    icon: ArchiveBoxIcon,
+    role: "ADMIN",
   },
-  { name: "Categorías", href: "/dashboard/category", icon: ArchiveBoxIcon },
   { name: "Temas", href: "/dashboard/themes", icon: TicketIcon },
   { name: "Autores", href: "/dashboard/author", icon: UserGroupIcon },
-  { name: "Usuarios", href: "/dashboard/users", icon: UserIcon },
+  { name: "Usuarios", href: "/dashboard/users", icon: UserIcon, role: "ADMIN" },
 ];
 
-export default function NavLinks() {
+export default function NavLinks({ user }: SideNavProps) {
   const pathname = usePathname();
+
+  // Filtra links según rol
+  const filteredLinks = links.filter((link) => {
+    if (link.role && link.role !== user.role) return false;
+    return true;
+  });
+
   return (
     <>
-      {links.map((link) => {
+      {filteredLinks.map((link) => {
         const LinkIcon = link.icon;
         return (
           <Link
@@ -37,9 +46,7 @@ export default function NavLinks() {
             href={link.href}
             className={clsx(
               "flex h-[48px] grow items-center justify-center gap-2 rounded-md bg-gray-50 p-3 text-sm font-medium hover:bg-sky-100 hover:text-blue-600 md:flex-none md:justify-start md:p-2 md:px-3",
-              {
-                "bg-sky-100 text-blue-600": pathname === link.href,
-              }
+              { "bg-sky-100 text-blue-600": pathname === link.href }
             )}
           >
             <LinkIcon className="w-6" />

@@ -8,7 +8,6 @@ import { useActionState } from "react";
 interface FormProps {
   categoria: Categoria;
   categoriasPrincipales: Categoria[];
-  categorias: Categoria[];
 }
 
 const initialState = { success: false, message: "" };
@@ -16,7 +15,6 @@ const initialState = { success: false, message: "" };
 export default function EditCategoryForm({
   categoria,
   categoriasPrincipales,
-  categorias,
 }: FormProps) {
   const [state, formAction, isPending] = useActionState(
     updateCategory.bind(null, Number(categoria.id)),

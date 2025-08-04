@@ -1,14 +1,11 @@
-import {
-  fetchCategoriaById,
-  fetchCategorias,
-  fetchCategoriasPrincipales,
-} from "@/app/lib/data";
+import { fetchCategoriaById, fetchCategoriasPrincipales } from "@/app/lib/data";
 import Breadcrumbs from "@/app/ui/books/breadcrumbs";
 import EditCategoryForm from "@/app/ui/categories/edit-fom";
 import LatestCategories from "@/app/ui/categories/latest-categories";
 
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "Editar Categoría",
@@ -22,7 +19,6 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
     fetchCategoriaById(id),
     fetchCategoriasPrincipales(),
   ]);
-  const categorias = await fetchCategorias();
 
   if (!categoria) {
     notFound();
@@ -45,9 +41,10 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
         <EditCategoryForm
           categoria={categoria}
           categoriasPrincipales={categoriasPrincipales}
-          categorias={categorias}
         />
-        <LatestCategories categorias={categorias} />
+        <Suspense>
+          <LatestCategories />
+        </Suspense>
       </div>
     </main>
   );

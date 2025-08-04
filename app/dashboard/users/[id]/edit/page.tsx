@@ -1,9 +1,10 @@
-import { fetchUserById, fetchUsers } from "@/app/lib/data";
+import { fetchUserById } from "@/app/lib/data";
 import Breadcrumbs from "@/app/ui/books/breadcrumbs";
 import EditUserForm from "@/app/ui/users/edit-fom";
-import LatestUsers from "@/app/ui/users/latest-categories";
+import LatestUsers from "@/app/ui/users/latest-users";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "Editar Usuario",
@@ -14,7 +15,6 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
   const id = params.id;
 
   const user = await fetchUserById(id);
-  const users = await fetchUsers();
 
   if (!user) {
     notFound();
@@ -35,7 +35,9 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
 
       <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-4 lg:grid-cols-8">
         <EditUserForm user={user} />
-        <LatestUsers users={users} />
+        <Suspense>
+          <LatestUsers />
+        </Suspense>
       </div>
     </main>
   );

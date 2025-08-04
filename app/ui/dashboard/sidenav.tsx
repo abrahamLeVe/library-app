@@ -1,10 +1,15 @@
-import Link from "next/link";
-import NavLinks from "@/app/ui/dashboard/nav-links";
 import AcmeLogo from "@/app/ui/acme-logo";
-import { PowerIcon } from "@heroicons/react/24/outline";
+import NavLinks from "@/app/ui/dashboard/nav-links";
 import { signOut } from "@/auth";
+import { PowerIcon } from "@heroicons/react/24/outline";
+import { Session } from "next-auth";
+import Link from "next/link";
 
-export default function SideNav() {
+export interface SideNavProps {
+  user: Session["user"];
+}
+
+export default function SideNav({ user }: SideNavProps) {
   return (
     <div className="flex h-full flex-col px-3 py-4 md:px-2">
       <Link
@@ -16,7 +21,7 @@ export default function SideNav() {
         </div>
       </Link>
       <div className="flex grow flex-row flex-wrap gap-1 justify-between md:gap-0 md:flex-col md:space-x-0 md:space-y-2">
-        <NavLinks />
+        <NavLinks user={user} />
         <div className="hidden h-auto w-full grow rounded-md bg-gray-50 md:block"></div>
         <form
           action={async () => {

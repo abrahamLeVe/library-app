@@ -1,3 +1,5 @@
+export type Role = "ADMIN" | "ASISTENTE" | "CLIENT";
+
 export interface Categoria {
   id: string;
   codigo: string;
@@ -17,7 +19,7 @@ export interface User {
   name: string;
   email: string;
   password: string;
-  role: "ADMIN" | "CLIENT" | "ASISTENTE";
+  role: Role;
   dni?: string | null;
   telefono?: string | null;
   direccion?: string | null;
@@ -32,3 +34,11 @@ export interface Autor {
   biografia: string | null;
   created_at?: string;
 }
+
+export type AppUser = {
+  id: string;
+  role: Role;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+};

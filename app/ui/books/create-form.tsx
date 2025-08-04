@@ -6,7 +6,6 @@ import { BookOpenIcon, CalendarIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
-import { useFormStatus } from "react-dom";
 
 export default function Form({
   categoriasPrincipales,
@@ -15,7 +14,10 @@ export default function Form({
   autores,
 }: any) {
   const initialState: State = { message: null, errors: {} };
-  const [state, formAction] = useActionState(createBook, initialState);
+  const [state, formAction, isPending] = useActionState(
+    createBook,
+    initialState
+  );
 
   const [temaSeleccionado, setTemaSeleccionado] = useState(
     state.values?.tema ?? ""
@@ -344,36 +346,22 @@ export default function Form({
       </div>
 
       {/* Botones */}
-      <FormButtons />
+      {/* Botones */}
+      <div className="flex justify-end gap-3">
+        <Link
+          href="/dashboard/books"
+          className="rounded-md border px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+          onClick={(e) => isPending && e.preventDefault()}
+        >
+          Cancelar
+        </Link>
+        <Button type="submit" disabled={isPending}>
+          {isPending ? "Guardando..." : "Guardar"}
+        </Button>
+      </div>
 
       {/* Campos ocultos para enviar datos adicionales */}
     </form>
-  );
-}
-
-function FormButtons() {
-  const { pending } = useFormStatus();
-
-  return (
-    <div className="mt-6 flex justify-end gap-4">
-      <Link
-        href="/dashboard/books"
-        className={clsx(
-          "flex h-10 items-center rounded-lg px-4 text-sm font-medium transition-colors",
-          pending
-            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-        )}
-        aria-disabled={pending}
-        onClick={(e) => pending && e.preventDefault()}
-      >
-        Cancelar
-      </Link>
-
-      <Button type="submit" disabled={pending}>
-        {pending ? "Guardando..." : "Guardar Libro"}
-      </Button>
-    </div>
   );
 }
 

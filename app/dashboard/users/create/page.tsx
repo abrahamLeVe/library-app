@@ -1,16 +1,14 @@
-import { fetchUsers } from "@/app/lib/data";
 import Breadcrumbs from "@/app/ui/books/breadcrumbs";
 import UserForm from "@/app/ui/users/create-form";
-import LatestUsers from "@/app/ui/users/latest-categories";
+import LatestUsers from "@/app/ui/users/latest-users";
 import { Metadata } from "next";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "Registrar Usuario",
 };
 
 export default async function Page() {
-  const users = await fetchUsers();
-
   return (
     <main className="relative overflow-hidden ">
       <Breadcrumbs
@@ -25,11 +23,10 @@ export default async function Page() {
       />
 
       <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-4 lg:grid-cols-8">
-        {/* Formulario para crear usuario */}
         <UserForm />
-
-        {/* Tabla con últimos usuarios registrados */}
-        <LatestUsers users={users} />
+        <Suspense>
+          <LatestUsers />
+        </Suspense>
       </div>
     </main>
   );

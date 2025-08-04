@@ -543,3 +543,13 @@ export async function fetchUserById(id: string): Promise<User | null> {
     throw new Error("No se pudo obtener el usuario.");
   }
 }
+
+export async function getUser(email: string): Promise<User | undefined> {
+  try {
+    const user = await sql<User[]>`SELECT * FROM users WHERE email=${email}`;
+    return user[0];
+  } catch (error) {
+    console.error("Failed to fetch user:", error);
+    throw new Error("Failed to fetch user.");
+  }
+}

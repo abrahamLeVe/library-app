@@ -1,6 +1,7 @@
 import { fetchFilteredBooks } from "@/app/lib/data";
 import clsx from "clsx";
 import { DeleteBook, UpdateBook } from "./buttons";
+import { Suspense } from "react";
 
 export default async function LibrosTable({
   query,
@@ -78,8 +79,10 @@ export default async function LibrosTable({
                   </td>
                   <td className="whitespace-nowrap py-3 pl-6 pr-3">
                     <div className="flex justify-end gap-3">
-                      <UpdateBook id={libro.id} />
-                      <DeleteBook id={libro.id} />
+                      <Suspense>
+                        <UpdateBook id={libro.id} />
+                        <DeleteBook id={libro.id} />
+                      </Suspense>
                     </div>
                   </td>
                 </tr>

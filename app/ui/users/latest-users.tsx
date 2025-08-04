@@ -1,11 +1,9 @@
-import { User } from "@/app/lib/definitions";
+import { fetchUsers } from "@/app/lib/data";
 import { DeleteUser, UpdateUser } from "./buttons";
 
-interface LatestUsersProps {
-  users: User[];
-}
+export default async function LatestUsers() {
+  const users = await fetchUsers();
 
-export default function LatestUsers({ users }: LatestUsersProps) {
   return (
     <div className="md:col-span-4 overflow-y-auto h-[500px] text-sm">
       <div className="flow-root">

@@ -1,12 +1,12 @@
 "use server";
 
 import { signIn } from "@/auth";
+import bcrypt from "bcrypt";
 import { AuthError } from "next-auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import postgres from "postgres";
 import { z } from "zod";
-import bcrypt from "bcrypt";
 import { capitalizeFirstLetter } from "./utils";
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
@@ -83,17 +83,8 @@ export async function createBook(prevState: State, formData: FormData) {
     };
   }
 
-  const {
-    codigo,
-    categoriaPrincipal,
-    subcategoria,
-    tema,
-    titulo,
-    autores,
-    anio,
-    origen,
-    estado,
-  } = validatedFields.data;
+  const { codigo, subcategoria, tema, titulo, autores, anio, origen, estado } =
+    validatedFields.data;
 
   try {
     // 1. Insertar libro

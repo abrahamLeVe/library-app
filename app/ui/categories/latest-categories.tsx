@@ -1,11 +1,8 @@
-import { Categoria } from "@/app/lib/definitions";
+import { fetchCategorias } from "@/app/lib/data";
 import { DeleteCategory, UpdateCategory } from "./buttons";
 
-interface TableProps {
-  categorias: Categoria[];
-}
-
-export default function LatestCategories({ categorias }: TableProps) {
+export default async function LatestCategories() {
+  const categorias = await fetchCategorias();
   return (
     <div className="md:col-span-4 overflow-y-auto h-[500px] text-sm">
       <div className="flow-root">

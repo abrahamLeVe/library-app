@@ -1,12 +1,12 @@
 import { fetchUsersPages } from "@/app/lib/data";
 import Pagination from "@/app/ui/books/pagination";
-import { CreateUser } from "@/app/ui/users/buttons";
 import { nunito } from "@/app/ui/fonts";
 import Search from "@/app/ui/search";
 import { BooksTableSkeleton } from "@/app/ui/skeletons";
+import { CreateUser } from "@/app/ui/users/buttons";
+import UsersTable from "@/app/ui/users/table";
 import { Metadata } from "next";
 import { Suspense } from "react";
-import UsersTable from "@/app/ui/users/table";
 
 export const metadata: Metadata = {
   title: "Usuarios",
